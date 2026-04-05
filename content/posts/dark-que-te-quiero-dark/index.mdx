@@ -1,0 +1,160 @@
+---
+title: "Implementing Dark Mode: From CSS Classes to Theme UI and CSS Variables"
+slug: "dark-que-te-quiero-dark"
+date: "2020-01-20T11:22:25.427Z"
+updated: "2026-04-04"
+excerpt: "Explore three distinct strategies for implementing dark mode: classic CSS class toggles, Theme UI hooks, and modern CSS variables with system preference detection."
+cover:
+  src: "/posts/dark-que-te-quiero-dark/cover.png"
+  alt: "Light and dark theme interface comparison"
+tags: ["React", "CSS", "Frontend Architecture", "UX"]
+canonical: "https://loserkid.io/posts/dark-que-te-quiero-dark"
+ogTitle: "Three Ways to Implement Dark Mode in Modern Web Apps"
+ogDescription: "A deep dive into dark mode implementation: comparing Google Fonts' CSS approach, Gatsby's Theme UI, and custom CSS variables with localStorage."
+linkedin:
+  previewMaxChars: 950
+  hashtags: ["darkmode", "frontend", "css", "webdev"]
+  utm: "utm_source=linkedin&utm_medium=post"
+summaryBullets:
+  - "Class-based toggling for maximum cross-browser compatibility"
+  - "Leveraging Theme UI and React hooks for seamless state management"
+  - "Using CSS variables and the prefers-color-scheme media query"
+  - "Persistence strategies with localStorage to prevent theme flashing"
+toc: true
+schema:
+  organization: "Personal Blog"
+  author: "Jean Aguilar"
+---
+
+> **Update — April 4, 2026:** This post has been updated to improve clarity and structure. Key changes include refined technical explanations of the CSS variable approach, improved code formatting, and a structured comparison of browser compatibility for different strategies.
+
+When I was first building this blog, the very first feature I wanted was a theme switcher. I’ve been fascinated by dark modes since the days of installing custom ROMs on my Galaxy S3 Mini with Android 4.1. Back then, a dark system UI was a novelty provided by the community; it’s only recently that we've seen it become a native standard across Android, iOS, and macOS.
+
+In this post, we'll explore how different websites implement their themes—ranging from manual toggles to systems that automatically sync with your OS preferences.
+
+
+## 1. The Google Fonts Approach: Class-Based Toggling
+
+The most straightforward method is the one used by [Google Fonts](https://fonts.google.com/). It relies on a high-level CSS class to switch the entire UI context.
+
+If you inspect the Google Fonts site, you'll see a class in the `<html>` tag called `t-white`. When you select the dark background option, JavaScript changes that class to `t-black`. 
+
+### CSS Implementation
+The CSS simply defines the same elements under different parent classes:
+
+```css
+/* Dark Theme Implementation */
+.t-black,
+.t-black body,
+.t-black #main {
+	background: #222;
+	color: #fff;
+	fill: #fff;
+}
+
+.t-black .fonts-module {
+	border-top-color: rgba(255, 255, 255, .4);
+}
+
+/* Light Theme Implementation */
+.t-white,
+.t-white body,
+.t-white #main {
+	background: #fff;
+	color: #333;
+	fill: #000;
+}
+
+.t-white .fonts-module {
+	border-top-color: rgba(0, 0, 0, .4);
+}
+```
+
+**The Verdict:**
+* **Pros:** Best-in-class cross-browser compatibility. It works even on legacy browsers like IE11 because it uses plain CSS selectors.
+* **Cons:** It can lead to code duplication as you effectively write your styles twice. In its basic form, it often doesn't persist after a refresh unless you add `localStorage` logic.
+
+## 2. The Gatsby & Theme UI Approach: Hook-Based Management
+
+Gatsby uses a library called [Theme UI](https://theme-ui.com/) to manage its styles. This approach moves the configuration into a "Theme Object" that defines colors, typography, and layout values.
+
+Theme UI provides a custom hook called `useColorMode` that allows you to easily switch or retrieve the current theme state.
+
+### Example Implementation
+```jsx
+import React from 'react'
+import { useColorMode } from 'theme-ui'
+
+export default props => {
+  const [colorMode, setColorMode] = useColorMode()
+  
+  return (
+    <header>
+      <button
+        onClick={e => {
+          setColorMode(colorMode === 'default' ? 'dark' : 'default')
+        }}>
+        Toggle {colorMode === 'default' ? 'Dark' : 'Light'}
+      </button>
+    </header>
+  )
+}
+```
+
+**The Verdict:**
+* **Pros:** Theme UI handles the "dirty work" for you, including persisting the selection in `localStorage` and respecting system preferences.
+* **Cons:** It is primarily compatible with React and requires you to be comfortable with styling within JSX (CSS-in-JS).
+
+## 3. The DIY Approach: CSS Variables and System Preferences
+
+For this blog, I used a custom implementation inspired by [overreacted.io](https://overreacted.io/). This method leverages **CSS Variables** (Custom Properties) and the `prefers-color-scheme` media query.
+
+### Using CSS Variables
+Variables allow us to define values that update dynamically based on the current theme class:
+
+```css
+html.light {
+  --btnColor: #e66992;
+  --bgColor: #ffffff;
+}
+
+html.dark {
+  --btnColor: #ffa7c4;
+  --bgColor: #1a1a1a;
+}
+
+button {
+  background: var(--btnColor);
+}
+```
+
+
+### Detecting System Preferences
+The `prefers-color-scheme` property allows the site to match the user's OS theme automatically. You can detect this in JavaScript using `window.matchMedia`:
+
+```javascript
+const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+if (darkQuery.matches) {
+  console.log("User prefers a dark theme");
+}
+```
+
+
+### Preventing the "Flash of Unstyled Content" (FOUC)
+A common bug in theme implementations is the site loading the default light theme for a split second before switching to the saved dark theme. 
+
+To fix this, you must run a blocking script **before** your main application (React) loads. This script should:
+1. Check `localStorage` for a saved preference.
+2. Check `prefers-color-scheme` as a fallback.
+3. Immediately apply the correct class to the `<html>` or `<body>` tag.
+
+## Conclusions
+
+Which approach should you choose?
+
+1. **Google Fonts Style:** Use this if you need deep enterprise support (IE11) or want to avoid CSS variables. It's robust but manual.
+2. **Theme UI:** Best for React developers who want a comprehensive tool that handles state, persistence, and theming out of the box.
+3. **DIY (CSS Variables):** Great for modern browsers. It provides the cleanest code structure and allows for fine-grained control over system-level synchronization.
+
+If I were to start over, I’d likely choose **Theme UI**. Even though I generally prefer external stylesheets, the ease of setup and built-in persistence makes the development experience much smoother.

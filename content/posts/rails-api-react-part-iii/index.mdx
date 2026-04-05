@@ -1,0 +1,231 @@
+---
+title: "Building a Rails API for React, Part III: Building the Movie Resource"
+slug: "rails-api-react-part-iii"
+date: "2019-06-07T11:23:12.427Z"
+updated: "2026-04-04"
+excerpt: "Learn how to build namespaced resources in a Rails API. We cover model validations with Shoulda Matchers, factories with Faker, and clean JSON responses using Active Model Serializers."
+cover:
+  src: "/posts/rails-api-react-part-iii/movies-routes.png"
+  alt: "Namespaced movie routes in Rails"
+tags: ["Rails", "React", "API", "RSpec", "Testing"]
+canonical: "https://loserkid.io/posts/rails-api-react-part-iii"
+ogTitle: "Building a Movie Resource: Rails API for React, Part III"
+ogDescription: "A deep dive into namespaced Rails controllers, model testing with Shoulda Matchers, and configuring Serializers for clean API responses."
+linkedin:
+  previewMaxChars: 950
+  hashtags: ["rubyonrails", "reactjs", "webdevelopment", "api"]
+  utm: "utm_source=linkedin&utm_medium=post"
+summaryBullets:
+  - "Implementing namespaced routing for API versioning (v1)"
+  - "Using Shoulda Matchers for clean, one-line model tests"
+  - "Generating dummy data with FactoryBot and Faker"
+  - "Controlling JSON output with Active Model Serializers"
+  - "Enabling Cross-Origin Resource Sharing (CORS) for local development"
+toc: true
+schema:
+  organization: "Personal Blog"
+  author: "Jean Aguilar"
+---
+
+> **Update — April 4, 2026:** This post has been updated to improve clarity and structure. Key changes include enhanced explanations for API namespacing, refined code block formatting, and more detailed guidance on using Serializers versus Jbuilder.
+
+In the third part of this series, we shift our focus back to the Rails backend to implement our first core resource: Movies. We'll ensure our architecture is ready for scale by using proper namespacing and a robust testing suite.
+
+More on this series:
+* [Part I: The Foundation](/posts/rails-api-react-part-i/)
+* [Part II: React Frontend Setup](/posts/rails-api-react-part-ii/)
+* [Part IV: Data Fetching with React](/posts/rails-api-react-part-iv/)
+
+## 1. Namespaced Routing
+
+To keep our API versioned and clean, we wrap our resources in `api/v1` namespaces. This prevents breaking changes for existing users when we decide to release a version 2.
+
+Edit `config/routes.rb`:
+
+```ruby
+Rails.application.routes.draw do
+  namespace :api do
+    namespace :v1 do
+      resources :movies
+    end
+  end
+end
+```
+
+Run `rails routes` to verify your endpoints:
+
+![Movie routes](/posts/rails-api-react-part-iii/movies-routes.png)
+
+## 2. The API Base Controller
+
+Inheriting from `ActionController::API` instead of `Base` keeps our controllers lightweight by skipping middleware intended for HTML rendering.
+
+```bash
+$ mkdir -p app/controllers/api/v1
+$ touch app/controllers/api/v1/api_controller.rb
+```
+
+Define the base class:
+
+```ruby
+class Api::V1::ApiController < ActionController::API
+end
+```
+
+## 3. The Movie Model
+
+Our initial Movie schema will include a title, plot, and release date.
+
+```bash
+$ rails generate model Movie title plot:string release_date:date
+$ rails db:create
+$ rails db:migrate
+```
+
+![Movie Model files](/posts/rails-api-react-part-iii/model-generated-files.png)
+
+### Model Validations
+We need to ensure the `title` and `release_date` are always provided.
+
+```ruby
+class Movie < ApplicationRecord
+  validates :title, :release_date, presence: true
+end
+```
+
+### Testing with Shoulda Matchers
+Using the gems we added in [Part I](/posts/rails-api-react-part-i/), we can write expressive, one-liner tests in `spec/models/movie_spec.rb`:
+
+```ruby
+RSpec.describe Movie, type: :model do
+  describe "validations" do
+    it { is_expected.to validate_presence_of(:title) }
+    it { is_expected.to validate_presence_of(:release_date) }
+  end
+end
+```
+
+---
+
+## 4. Factories and Seeding
+
+To avoid repetitive setup in our tests, we use **FactoryBot** combined with **Faker** for dynamic dummy data.
+
+### Creating the Factory
+```ruby
+# spec/factories/movies.rb
+FactoryBot.define do
+  factory :movie do
+    title { Faker::Book.title }
+    plot { Faker::Lorem.paragraph }
+    release_date { Faker::Date.birthday(18, 65) }
+  end
+end
+```
+
+### Seeding the Database
+Populate your development environment with 10 random movies in `db/seeds.rb`:
+
+```ruby
+10.times do
+  Movie.create(
+    title: Faker::Book.title,
+    plot: Faker::Lorem.paragraph,
+    release_date: Faker::Date.birthday(18, 65),
+  )
+end
+```
+
+Run `$ rails db:seed` to apply.
+
+---
+
+## 5. The Movies Controller
+
+This controller handles our standard CRUD operations, rendering JSON directly instead of HTML views.
+
+```ruby
+# app/controllers/api/v1/movies_controller.rb
+class Api::V1::MoviesController < Api::V1::ApiController
+  before_action :set_movie, only: %i[show update destroy]
+
+  def index
+    @movies = Movie.all
+    render json: @movies
+  end
+
+  def show
+    render json: @movie
+  end
+
+  def create
+    @movie = Movie.new(movie_params)
+    if @movie.save
+      render json: @movie, status: :created
+    else
+      render json: @movie.errors, status: :unprocessable_entity
+    end
+  end
+
+  # ... update and destroy actions
+end
+```
+
+---
+
+## 6. Controlling JSON with Serializers
+
+By default, Rails renders all model attributes, including sensitive or unnecessary fields like `created_at`. We use **Active Model Serializers** to prune our responses.
+
+Add to Gemfile:
+```ruby
+gem "active_model_serializers", "~> 0.10.0"
+```
+
+### Defining the Serializer
+```ruby
+# app/serializers/movie_serializer.rb
+class MovieSerializer < ActiveModel::Serializer
+  attributes :id, :title, :plot, :release_date
+end
+```
+
+Now, a GET request to `/api/v1/movies/1` will return only the fields defined above, keeping your API payload lean and secure.
+
+---
+
+## 7. Enabling CORS
+
+Since our React frontend and Rails API run on different ports (usually 3001 and 3000), browsers will block requests by default. We must enable **Cross-Origin Resource Sharing**.
+
+Add `gem "rack-cors"` to your Gemfile and configure the initializer:
+
+```ruby
+# config/initializers/cors.rb
+Rails.application.config.middleware.insert_before 0, Rack::Cors do
+  allow do
+    origins "*" # In production, replace this with your specific frontend domain
+    resource "*",
+             headers: :any,
+             methods: %i[get post put patch delete options head]
+  end
+end
+```
+
+> **Security Note:** Never use `origins "*"` in a production environment. Always whitelist specific domains to prevent unauthorized access.
+
+---
+
+## Verification
+
+Before wrapping up, always ensure your code adheres to standards and passes all tests.
+
+```bash
+$ rubocop -a
+$ rspec
+```
+
+![Correcting Offenses](/posts/rails-api-react-part-iii/correcting-offenses.png)
+![RSpec Passed](/posts/rails-api-react-part-iii/rspec-passed.png)
+
+Everything is green! In the next post, we'll head back to the React side to start consuming these endpoints.

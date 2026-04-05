@@ -1,0 +1,109 @@
+---
+title: "Polymorphism vs. STI: Architectural Lessons from a Rails Apprentice"
+slug: "rails-polymorphism-vs-sti-lessons"
+date: "2018-11-29T20:45:57.427Z"
+updated: "2026-04-04"
+excerpt: "A reflection on transitioning from polymorphic associations to Single Table Inheritance (STI) in Ruby on Rails, and how to manage custom role data without polluting your database schema."
+tags: ["Ruby on Rails", "Active Record", "Architecture", "Database Design"]
+canonical: "https://loserkid.io/posts/rails-polymorphism-vs-sti-lessons"
+ogTitle: "Rails Architecture: Polymorphism vs. Single Table Inheritance (STI)"
+ogDescription: "Lessons learned during my first professional Rails project about choosing the right inheritance pattern for user roles."
+linkedin:
+  previewMaxChars: 950
+  hashtags: ["rubyonrails", "backend", "database", "webdev"]
+  utm: "utm_source=linkedin&utm_medium=post"
+summaryBullets:
+  - "The limitations of basic enums for complex user roles"
+  - "Implementing and querying polymorphic associations in Rails"
+  - "Why Single Table Inheritance (STI) provides a more natural developer experience"
+  - "Using delegated types/has_one to keep STI tables clean"
+toc: true
+schema:
+  organization: "Personal Blog"
+  author: "Jean Aguilar"
+---
+
+> **Update — April 4, 2026:** This post has been updated to improve clarity and structure. Key changes include enhanced explanations of Active Record associations, improved code block readability, and a more focused comparison between Polymorphism and STI.
+
+I’m currently nearing the end of a project I’ve been working on for the past three and a half months—my first real Rails application and my first professional project at Pernix. It has been an incredible experience learning the nuances of the framework and building confidence with the ORM.
+
+While I had done the classic "hello world" blog before, real-world modeling presented new challenges. Specifically, managing complex user roles with custom data was a significant hurdle.
+
+## The Challenge: Beyond Basic Roles
+
+In many projects, you can handle roles with a simple `enum` in the User model. However, in this project, every role (Admin, Mentor, Client) required its own unique set of attributes. Creating separate models entirely felt wrong because they still shared core user data.
+
+### Initial Approach: Polymorphic Associations
+
+My first solution was to use a polymorphic association. This allowed the `User` model to belong to an "account" that could be any of the role types.
+
+```ruby
+class User < ApplicationRecord
+  belongs_to :account, polymorphic: true, dependent: :destroy
+end
+
+class Admin < ApplicationRecord
+  has_one :user, as: :account
+end
+
+class Mentor < ApplicationRecord
+  has_one :user, as: :account
+end
+
+class Client < ApplicationRecord
+  has_one :user, as: :account
+end
+```
+
+To make this work, I added `account_id` and `account_type` columns to the `users` table. While Rails convention often uses the `-able` suffix (like `accountable`), I felt `account` was more descriptive in this specific context.
+
+Querying the role was simple:
+```ruby
+user.account # Returns the Admin, Client, or Mentor object
+admin.user   # Returns the base User attributes
+```
+
+## The Pivot: Single Table Inheritance (STI)
+
+A new project leader later refactored this logic to use **Single Table Inheritance (STI)**. Although I was initially attached to my polymorphic solution, STI proved to be cleaner and more intuitive for our needs.
+
+### How STI Differs
+In STI, all roles are stored in a single table (the `users` table), differentiated by a `type` column. Unlike polymorphism, where every model inherits from `ApplicationRecord`, STI models inherit directly from the base `User` class.
+
+```ruby
+class User < ApplicationRecord
+end
+
+class Admin < User
+end
+
+class Mentor < User
+end
+
+class Client < User
+end
+```
+
+The primary benefit is that the object *is* the role. Calling `user` returns the specific subclass object, and you don't need to traverse an association to find role-specific logic.
+
+
+### Solving the "Fat Table" Problem
+The main criticism of STI is that the shared table can become cluttered with columns that only apply to one specific role. To solve this, we used a `has_one` association for custom role data.
+
+For example, the `Client` model (which inherits from `User`) has an association with `ClientInfo`:
+
+```ruby
+class Client < User
+  has_one :client_info, dependent: :destroy
+end
+
+class ClientInfo < ApplicationRecord
+  belongs_to :client, dependent: :destroy
+end
+```
+
+This hybrid approach gives us the clean API of STI while keeping the database schema normalized and performant.
+
+## Final Thoughts
+
+Understanding these associations is critical for anyone using an ORM. Whether you choose Polymorphism or STI depends on your data structure, but knowing how to manipulate that data properly makes the difference between a brittle app and a scalable one.

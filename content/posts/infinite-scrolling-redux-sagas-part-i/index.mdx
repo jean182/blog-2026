@@ -1,0 +1,300 @@
+---
+title: "Infinite Scrolling in React with Redux and Redux-Saga (Part I: Setup)"
+slug: "infinite-scrolling-redux-sagas-part-i"
+date: "2019-10-14"
+excerpt: "Learn how to set up Redux and Redux-Saga for infinite scrolling in React using a real-world Pokédex example."
+tags: ["react", "redux", "redux-saga", "infinite-scroll", "javascript"]
+canonical: "https://loserkid.io/posts/infinite-scrolling-redux-sagas-part-i"
+ogTitle: "Infinite Scrolling in React with Redux and Redux-Saga (Part I)"
+ogDescription: "Step-by-step guide to setting up Redux and Redux-Saga for handling infinite scrolling with paginated APIs."
+linkedin:
+  previewMaxChars: 950
+  hashtags: ["reactjs", "redux", "webdev"]
+  utm: "utm_source=linkedin&utm_medium=post"
+summaryBullets:
+  - "Set up Redux store and reducers"
+  - "Handle paginated data for infinite scroll"
+  - "Use Redux-Saga for async flows"
+toc: true
+schema:
+  organization: "Personal Blog"
+  author: "Jean Aguilar"
+---
+
+> **Update — 2026-04-04:** This post has been updated to improve clarity and structure. Key changes include clearer explanations of Redux flow, improved formatting, and better code readability.
+
+More on this series:  
+[Part II](/posts/infinite-scrolling-redux-sagas-part-ii/) ⋮ [Part III](/posts/infinite-scrolling-redux-sagas-part-iii/)
+
+## Introduction
+
+This tutorial walks through building the foundation for infinite scrolling using Redux and Redux-Saga.
+
+The example uses a Pokédex-style app to demonstrate how to handle large datasets (700+ Pokémon) using paginated API requests.
+
+## Setup
+
+Create a new React app and install dependencies:
+
+```bash
+yarn add redux react-redux redux-logger redux-saga
+```
+
+## Redux Module Structure
+
+```bash
+mkdir src/redux
+mkdir src/redux/modules
+touch src/redux/modules/pokemonList.js
+```
+
+## Actions and Initial State
+
+```js
+const FETCH_POKEMON_LIST = "pokemon-frontend/pokemon/FETCH_POKEMON_LIST";
+const FETCH_POKEMON_LIST_SUCCESS =
+  "pokemon-frontend/pokemon/FETCH_POKEMON_LIST_SUCCESS";
+const FETCH_POKEMON_LIST_FAILURE =
+  "pokemon-frontend/pokemon/FETCH_POKEMON_LIST_FAILURE";
+
+const LOAD_MORE_POKEMON = "pokemon-frontend/pokemon/LOAD_MORE_POKEMON";
+const LOAD_MORE_POKEMON_SUCCEED =
+  "pokemon-frontend/pokemon/LOAD_MORE_POKEMON_SUCCEED";
+const LOAD_MORE_POKEMON_FAILED =
+  "pokemon-frontend/pokemon/LOAD_MORE_POKEMON_FAILED";
+
+const initialState = {
+  pokemonList: [],
+  isLoading: false,
+  error: "",
+};
+```
+
+We define two groups of actions:
+
+- Initial fetch
+- Load more (triggered on scroll)
+
+## Reducer
+
+```js
+export default function reducer(state = initialState, action = {}) {
+  switch (action.type) {
+    case FETCH_POKEMON_LIST:
+    case LOAD_MORE_POKEMON:
+      return {
+        ...state,
+        isLoading: true,
+      };
+
+    case FETCH_POKEMON_LIST_SUCCESS:
+      return {
+        ...state,
+        pokemonList: action.payload.data.results,
+        isLoading: false,
+      };
+
+    case LOAD_MORE_POKEMON_SUCCEED:
+      return {
+        ...state,
+        pokemonList: [...state.pokemonList, ...action.payload.data.results],
+        isLoading: false,
+      };
+
+    case FETCH_POKEMON_LIST_FAILURE:
+    case LOAD_MORE_POKEMON_FAILED:
+      return {
+        ...state,
+        error: action.payload,
+        isLoading: false,
+      };
+
+    default:
+      return state;
+  }
+}
+```
+
+> The key detail: **new results are appended**, not replaced.
+
+## Action Creators
+
+```js
+export function loadPokemonList() {
+  return { type: FETCH_POKEMON_LIST };
+}
+
+export function loadPokemonListSucceed(payload) {
+  return { type: FETCH_POKEMON_LIST_SUCCESS, payload };
+}
+
+export function loadPokemonListFailed(payload) {
+  return { type: FETCH_POKEMON_LIST_FAILURE, payload };
+}
+
+export function loadMorePokemon(payload) {
+  return { type: LOAD_MORE_POKEMON, payload };
+}
+
+export function loadMorePokemonSucceed(payload) {
+  return { type: LOAD_MORE_POKEMON_SUCCEED, payload };
+}
+
+export function loadMorePokemonFailed(payload) {
+  return { type: LOAD_MORE_POKEMON_FAILED, payload };
+}
+```
+
+## Sagas
+
+```js
+import { call, delay, put, takeEvery, takeLatest } from "redux-saga/effects";
+
+export function* fetchPokemonListSaga() {
+  try {
+    const response = yield call(getPokemonList);
+    yield put(loadPokemonListSucceed(response));
+  } catch (error) {
+    yield put(loadPokemonListFailed(error.message));
+  }
+}
+
+export function* loadMorePokemonListSaga(action) {
+  try {
+    const response = yield call(loadMorePokemonList, action.payload);
+    yield delay(1000);
+    yield put(loadMorePokemonSucceed(response));
+  } catch (error) {
+    yield put(loadMorePokemonFailed(error.message));
+  }
+}
+
+export function* pokemonListWatcherSaga() {
+  yield takeLatest(FETCH_POKEMON_LIST, fetchPokemonListSaga);
+  yield takeEvery(LOAD_MORE_POKEMON, loadMorePokemonListSaga);
+}
+```
+
+### Key Concepts
+
+- `call`: executes async requests
+- `put`: dispatches actions
+- `takeLatest`: cancels previous requests
+- `takeEvery`: runs all requests (important for scroll behavior)
+
+## Root Setup
+
+### Root Saga
+
+```js
+import { all } from "redux-saga/effects";
+import { pokemonListWatcherSaga } from "./modules/pokemonList";
+
+export default function* rootSaga() {
+  yield all([pokemonListWatcherSaga()]);
+}
+```
+
+### Root Reducer
+
+```js
+import { combineReducers } from "redux";
+import pokemonListReducer from "./modules/pokemonList";
+
+export default combineReducers({
+  pokemonListReducer,
+});
+```
+
+## Store Configuration
+
+```js
+import { createStore, applyMiddleware } from "redux";
+import { createLogger } from "redux-logger";
+import createSagaMiddleware from "redux-saga";
+
+import rootReducer from "./rootReducer";
+import rootSaga from "./rootSaga";
+
+export default function configureStore(initialState = {}) {
+  const middlewares = [];
+
+  if (process.env.NODE_ENV === "development") {
+    middlewares.push(createLogger({ collapsed: true }));
+  }
+
+  const sagaMiddleware = createSagaMiddleware();
+  middlewares.push(sagaMiddleware);
+
+  const store = createStore(
+    rootReducer,
+    initialState,
+    applyMiddleware(...middlewares),
+  );
+
+  sagaMiddleware.run(rootSaga);
+
+  return store;
+}
+```
+
+## API Layer
+
+```bash
+yarn add axios humps
+mkdir src/api
+touch src/api/axiosInstance.js
+touch src/api/pokemonEndpoints.js
+```
+
+### Axios Instance
+
+```js
+import axios from "axios";
+import humps from "humps";
+
+const axiosInstance = axios.create({
+  baseURL: "https://pokeapi.co/api/v2/",
+  transformResponse: [
+    ...axios.defaults.transformResponse,
+    (data) => humps.camelizeKeys(data),
+  ],
+  transformRequest: [
+    (data) => humps.decamelizeKeys(data),
+    ...axios.defaults.transformRequest,
+  ],
+});
+
+export default function api(method, url, data = {}, options = {}) {
+  const httpMethod = method.toLowerCase();
+  const hasData = ["post", "put", "patch"].includes(httpMethod);
+
+  return hasData
+    ? axiosInstance[httpMethod](url, data, options)
+    : axiosInstance[httpMethod](url, data);
+}
+```
+
+### Endpoints
+
+```js
+import API from "./axiosInstance";
+
+export const getPokemonList = () => {
+  return API("get", "/pokemon/?offset=0&limit=20");
+};
+
+export const loadMorePokemonList = (offset) => {
+  return API("get", `/pokemon/?offset=${offset}&limit=20`);
+};
+```
+
+## Wrap-up
+
+This setup gives a solid foundation for:
+
+- Handling paginated APIs
+- Managing async flows with Redux-Saga
+- Supporting infinite scrolling
+
+In Part II, the focus will shift to building the UI and connecting everything together.

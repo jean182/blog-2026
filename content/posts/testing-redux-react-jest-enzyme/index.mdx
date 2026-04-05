@@ -1,0 +1,215 @@
+---
+title: "Testing React-Redux Components with Jest and Enzyme: A Practical Guide"
+slug: "testing-redux-react-jest-enzyme"
+date: "2020-01-23T11:22:25.427Z"
+updated: "2026-04-04"
+excerpt: "Master the art of testing Redux in React. Learn professional patterns for testing wrapped components, reducers, and selectors using Jest and Enzyme."
+tags: ["React", "Redux", "Testing", "Jest", "Enzyme"]
+canonical: "https://loserkid.io/posts/testing-redux-react-jest-enzyme"
+ogTitle: "Professional Patterns for Testing Redux in React"
+ogDescription: "Struggling with Redux tests? Learn how to separate concerns and test components, reducers, and selectors effectively with Jest and Enzyme."
+linkedin:
+  previewMaxChars: 950
+  hashtags: ["reactjs", "redux", "jest", "webtesting"]
+  utm: "utm_source=linkedin&utm_medium=post"
+summaryBullets:
+  - "Testing connected components using named exports to bypass wrappers"
+  - "Mocking Redux store state and action dispatches in unit tests"
+  - "Validating reducer logic for predictable state transitions"
+  - "Unit testing selectors for data computation and sorting logic"
+toc: true
+schema:
+  organization: "Personal Blog"
+  author: "Jean Aguilar"
+---
+
+> **Update — April 4, 2026:** This post has been updated to improve clarity and structure. Key changes include refined code examples, improved flow of technical explanations, and updated formatting for modern MDX standards.
+
+In this post, I want to share some practical tips I've discovered while testing React applications. Working on real-world projects has taught me that the key to successful testing is separating concerns—especially when dealing with `react-redux`.
+
+These examples utilize **Jest** as the test suite and **Enzyme** as the testing utility.
+
+## Testing Wrapped Components
+
+Let's start with a common hurdle: Higher-Order Components (HOCs). Libraries like `react-redux` (via `connect`) and React Router (via `withRouter`) wrap your components to provide extra functionality.
+
+When you first try to test a connected component, you'll likely encounter this error:
+
+> Invariant Violation: Could not find "store" in the context of "Connect(ComponentName)". Either wrap the root component in a `<Provider />` or pass a custom React context provider...
+
+This happens because the test environment isn't wrapped in a `<Provider />` and is unaware of the Redux store.
+
+### The Named Export Pattern
+
+The cleanest solution is to use a <a href="https://redux.js.org/recipes/writing-tests/#connected-components" target="_blank" rel="noopener noreferrer">named export</a> for the raw component, allowing you to test it in isolation from the Redux wrapper.
+
+Take this counter component:
+
+```jsx
+// Counter.js
+import React from "react";
+import { connect } from "react-redux";
+
+export const Counter = ({ counter }) => {
+  return <p>{counter}</p>;
+};
+
+const mapStateToProps = (state) => ({
+  counter: state.counterReducer.counter,
+});
+
+export default connect(mapStateToProps)(Counter);
+```
+
+To test it, we import the **named export** `Counter` instead of the default export. We can then inject mock data as regular props.
+
+```js
+// Counter.test.js
+import React from "react";
+import { shallow } from "enzyme";
+import { Counter } from "./Counter"; // Named import
+
+let component;
+const mockProps = { counter: 0 };
+
+describe("Counter Component", () => {
+  beforeAll(() => {
+    component = shallow(<Counter {...mockProps} />);
+  });
+
+  it("displays the counter value", () => {
+    expect(component.find("p").text()).toBe("0");
+  });
+});
+```
+
+### Mocking Action Dispatches
+
+Actions are also passed as props. I prefer using `bindActionCreators` to dispatch actions by simply calling a function, which makes mocking straightforward.
+
+```jsx
+// Counter.js (Extended)
+import { bindActionCreators } from "redux";
+import { incrementAction, decrementAction } from "redux-modules/counter/counter";
+
+export const Counter = ({ counter, increment, decrement }) => {
+  return (
+    <div>
+      <p>{counter}</p>
+      <button id="increment" onClick={() => increment()}>Increment</button>
+      <button id="decrement" onClick={() => decrement()}>Decrement</button>
+    </div>
+  );
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return bindActionCreators({
+    increment: incrementAction,
+    decrement: decrementAction
+  }, dispatch);
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Counter);
+```
+
+In the test, we mock the `increment` function using `jest.fn()`. We aren't testing *what* the function does (that's the reducer's job), only that it is **called** when the UI interaction occurs.
+
+```js
+const mockProps = {
+  counter: 1,
+  increment: jest.fn(() => 1),
+  decrement: jest.fn(() => -1)
+};
+
+it("triggers the increment function on click", () => {
+  component.find("#increment").simulate("click");
+  expect(mockProps.increment).toHaveBeenCalled();
+});
+```
+
+> **Note:** If you're using other wrappers like `withRouter`, use the same named export pattern to bypass the HOC for your unit tests.
+
+---
+
+## Testing the Reducer
+
+Testing a reducer is a matter of verifying that a given state and action return the expected new state. It is pure functional testing.
+
+```js
+// counterReducer.js
+const initialState = { counter: 0 };
+
+export default function reducer(state = initialState, action = {}) {
+  switch (action.type) {
+    case "INCREMENT":
+      return { ...state, counter: state.counter + 1 };
+    case "DECREMENT":
+      return { ...state, counter: state.counter - 1 };
+    default:
+      return state;
+  }
+}
+```
+
+The test proves that the reducer handles actions predictably:
+
+```js
+describe("Counter Reducer", () => {
+  const initialState = { counter: 0 };
+
+  it("handles INCREMENT action", () => {
+    const action = { type: "INCREMENT" };
+    const expectedState = { counter: 1 };
+    
+    expect(reducer(initialState, action)).toEqual(expectedState);
+  });
+});
+```
+
+Separating the Redux logic from the React UI allows you to ensure the state transitions are perfect without cluttering your component tests.
+
+---
+
+## Testing Selectors
+
+Selectors take the Redux state and perform computations (like sorting or filtering) before the data reaches the component.
+
+```js
+// selectors.js
+export const usersByAgeSelector = (state) => {
+  return [...state.userReducer.users].sort((a, b) => a.age - b.age);
+};
+```
+
+Testing selectors is pure unit testing. You simply pass a mock state object and verify the output.
+
+```js
+describe("Selectors", () => {
+  const state = {
+    userReducer: {
+      users: [
+        { name: "Bob", age: 27 },
+        { name: "Anne", age: 18 }
+      ],
+    }
+  };
+
+  it("sorts users by age", () => {
+    const result = usersByAgeSelector(state);
+    expect(result[0].age).toBe(18);
+    expect(result[1].age).toBe(27);
+  });
+});
+```
+
+**Important:** Your mock state structure must match your root reducer's actual structure, or the selector will fail to find the data.
+
+---
+
+## Conclusion
+
+By separating concerns—testing components for UI behavior, reducers for state logic, and selectors for data transformation—you create a robust, maintainable test suite. 
+
+I haven't covered side effects like `redux-saga` here, but that deserves its own post. If you found this helpful or have suggestions for improvement, let me know!
+
+Check out the <a href="https://github.com/jean182/react-redux-counter-testing-sample" target="_blank" rel="noopener noreferrer">example repository</a> for the full code.

@@ -1,0 +1,192 @@
+---
+title: "Infinite Scrolling in React with Redux and Redux-Saga (Part III: Performance & Architecture Improvements)"
+slug: "infinite-scrolling-redux-sagas-part-iii"
+date: "2020-01-16"
+excerpt: "Improve infinite scrolling performance by reducing API calls and introducing selectors, filters, and better state architecture."
+tags: ["react", "redux", "redux-saga", "performance", "architecture"]
+canonical: "https://loserkid.io/posts/infinite-scrolling-redux-sagas-part-iii"
+ogTitle: "Infinite Scrolling in React (Part III): Performance & Architecture"
+ogDescription: "Optimize infinite scrolling in React by reducing API calls and using selectors, filters, and better Redux architecture."
+linkedin:
+  previewMaxChars: 950
+  hashtags: ["reactjs", "redux", "webdev"]
+  utm: "utm_source=linkedin&utm_medium=post"
+summaryBullets:
+  - "Reduce API calls by moving logic to frontend"
+  - "Use selectors for derived state and filtering"
+  - "Improve Redux architecture for scalability"
+toc: true
+schema:
+  organization: "Personal Blog"
+  author: "Jean Aguilar"
+---
+
+> **Update — 2026-04-04:** This post has been updated to improve clarity and structure. Key changes include clearer explanations of selectors, improved code flow, and better organization of architectural decisions.
+
+More on this series:  
+[Part I](/posts/infinite-scrolling-redux-sagas-part-i/) ⋮ [Part II](/posts/infinite-scrolling-redux-sagas-part-ii/)
+
+## Introduction
+
+This part focuses on improving the original implementation.
+
+The main issue: the app was making multiple API calls to PokeAPI. The goal is to reduce that to a single request and handle the rest on the frontend.
+
+## Moving State to Redux
+
+Previously, pagination state lived inside the component. Now it is moved to Redux to support:
+
+- Filtering
+- Sorting
+- Reusability across the app
+
+```js
+const INCREMENT = "pokemon-frontend/filters/INCREMENT";
+
+const filtersReducerDefaultState = {
+  count: 20,
+};
+
+export default (state = filtersReducerDefaultState, action) => {
+  switch (action.type) {
+    case INCREMENT:
+      return {
+        ...state,
+        count: state.count + 20,
+      };
+    default:
+      return state;
+  }
+};
+
+export const increment = () => ({
+  type: INCREMENT,
+});
+```
+
+## Selectors
+
+Selectors allow computing derived data from Redux state.
+
+```js
+const pokemonListSelector = (state) =>
+  state.pokemonListReducer.pokemonList;
+
+const filterSelector = (state) => state.filterReducer;
+
+export const pokemonListFilterSelector = createSelector(
+  [pokemonListSelector, filterSelector],
+  (pokemonList, { count }) => {
+    return pokemonList.filter((pokemon) => pokemon.id <= count);
+  },
+);
+```
+
+This enables filtering without modifying the original state.
+
+## Improving the Reducer
+
+```js
+case FETCH_POKEMON_LIST_SUCCESS:
+  const { results } = action.payload.data;
+  const pokemonResultsList = results.map((pokemon) => {
+    const id = parseInt(getId(pokemon.url), 10);
+    return { id, ...pokemon };
+  });
+
+  return {
+    ...state,
+    pokemonList: pokemonResultsList,
+    isLoading: false,
+  };
+```
+
+Now each Pokémon includes an `id`, making filtering easier and avoiding repeated parsing.
+
+## New Display Flow
+
+Instead of fetching more data, we simulate loading:
+
+```js
+function* displayMorePokemonSaga() {
+  yield delay(400);
+  yield put(displayMorePokemonEnd());
+  yield put(increment());
+}
+```
+
+This removes extra API calls and improves performance.
+
+## Updating the Component
+
+```jsx
+const mapStateToProps = (state) => ({
+  isLoading: state.pokemonListReducer.isLoading,
+  error: state.pokemonListReducer.error,
+  pokemonList: pokemonListFilterSelector(state),
+});
+```
+
+We can now simplify the component using hooks:
+
+```jsx
+useEffect(() => {
+  fetchActionCreator();
+}, [fetchActionCreator]);
+
+const handleScroll = (event) => {
+  const element = event.target;
+  if (element.scrollHeight - element.scrollTop === element.clientHeight) {
+    displayMore();
+  }
+};
+```
+
+## Fetching All Data Once
+
+```js
+export const getPokemonList = () => {
+  return API("get", "/pokemon/?offset=0&limit=807");
+};
+```
+
+This enables frontend-driven pagination.
+
+## Total Count Selector
+
+```js
+export const pokemonListCount = createSelector(
+  [pokemonListSelector],
+  (pokemonList) => pokemonList.length
+);
+```
+
+Usage:
+
+```jsx
+<p>
+  Displaying {pokemonList.length} pokemon of {totalPokemonCount}
+</p>
+```
+
+## Prevent Over-fetching
+
+```js
+if (
+  element.scrollHeight - element.scrollTop === element.clientHeight &&
+  totalPokemonCount > pokemonList.length
+) {
+  displayMore();
+}
+```
+
+## Wrap-up
+
+Key improvements:
+
+- Only one API call
+- Better state architecture
+- Cleaner UI logic
+- Scalable filtering system
+
+This approach shifts complexity to the frontend, reducing backend dependency and improving performance.

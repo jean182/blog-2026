@@ -1,0 +1,119 @@
+---
+title: "Automating Rails CI/CD: From Bitbucket Pipelines to Heroku"
+slug: "rails-bitbucket-pipelines-heroku-deployment"
+date: "2018-12-18T04:04:44.427Z"
+updated: "2026-04-04"
+excerpt: "Learn how to bridge the gap between development and production by setting up a seamless CI/CD pipeline for Rails using Bitbucket Pipelines and Heroku."
+tags: ["Rails", "CI/CD", "Bitbucket", "Heroku", "DevOps"]
+canonical: "https://loserkid.io/posts/rails-bitbucket-pipelines-heroku-deployment"
+ogTitle: "Step-by-Step: Rails CI/CD with Bitbucket and Heroku"
+ogDescription: "Streamline your development workflow with automated testing and multi-environment deployment for Ruby on Rails."
+linkedin:
+  previewMaxChars: 950
+  hashtags: ["rubyonrails", "devops", "cicd", "heroku"]
+  utm: "utm_source=linkedin&utm_medium=post"
+summaryBullets:
+  - "Configuring Rails with RSpec and Rubocop for professional CI gatekeeping"
+  - "Setting up Bitbucket Pipelines using Dockerized environments"
+  - "Multi-environment deployment strategies for Staging and Production"
+  - "Securely managing Heroku API keys within repository variables"
+toc: true
+schema:
+  organization: "Personal Blog"
+  author: "Jean Aguilar"
+---
+
+> **Update — April 4, 2026:** This post has been updated to improve clarity and structure. Key changes include refined technical explanations for gem dependencies, improved pipeline configuration guidance, and standardized formatting for better readability.
+
+During my time in college, I was tasked with developing a continuous integration (CI) system using a stack of my choice. Naturally, I chose **Ruby on Rails**. This post outlines the specific steps required to implement a CI/CD workflow using **Bitbucket Pipelines** and **Heroku**.
+
+## 1. Initial Rails Configuration
+
+We begin by creating a fresh Rails application. We'll use the `-T` flag to skip the default Minitest suite (opting for RSpec instead) and configure PostgreSQL as our database.
+
+```bash
+$ rails new ci-conceptual -T --database=postgresql
+```
+
+### Essential Dependencies
+To support a professional development and testing workflow, we add several key gems to the `Gemfile`:
+
+```ruby
+group :development, :test do
+  gem 'pry'
+  gem 'pry-remote'
+  gem 'rspec-rails'
+  gem 'factory_bot_rails'
+  gem 'shoulda-matchers'
+end
+
+group :development do
+  gem 'listen'
+  gem 'web-console'
+  gem 'spring'
+  gem 'erb2haml'
+  gem 'rails-erd', require: false
+  gem 'rubocop', '~> 0.46.0', require: false
+end
+
+group :test do
+  gem 'simplecov', require: false
+  gem 'database_cleaner'
+end
+```
+
+### Gem Breakdown
+* **Testing Suite**: We utilize **RSpec** for unit testing, **FactoryBot** for dummy data, and **Shoulda Matchers** for expressive validation tests.
+* **Code Quality**: **Rubocop** acts as our linter, enforcing community style guides or custom rules defined in a `.rubocop.yml` file.
+* **Utilities**: **erb2haml** is used to convert standard ERB templates to HAML, while **rails-erd** generates an Entity-Relationship Diagram (ERD) based on the database schema.
+* **Coverage**: **SimpleCov** provides insights into how much of our codebase is covered by tests.
+
+---
+
+## 2. Setting Up Bitbucket Pipelines
+
+A **Bitbucket Pipeline** is essentially a Docker container that recreates your application's environment in the cloud. This allows us to run custom scripts automatically whenever code is pushed to the repository.
+
+We define these operations in a `bitbucket-pipelines.yml` file. This configuration is highly flexible, allowing you to target specific branches or define distinct deployment environments.
+
+### Configuration Example
+The pipeline is typically configured to run the linter and test suite on every push, ensuring that no broken code reaches the remote repository.
+
+```yaml
+# Simplified bitbucket-pipelines.yml concept
+image: ruby:2.5.1
+pipelines:
+  default:
+    - step:
+        script:
+          - bundle install
+          - bundle exec rubocop
+          - bundle exec rspec
+```
+
+---
+
+## 3. Automated Deployment to Heroku
+
+To automate the transition from CI to CD (Continuous Deployment), we use shell scripts executed within the Bitbucket environment.
+
+### Secure Credentials
+For Bitbucket to communicate with Heroku, it requires an API key. You can retrieve this via the Heroku CLI:
+
+```bash
+$ heroku auth:token
+```
+
+This token must be added as a repository variable named `HEROKU_API_KEY` under **Settings > Repository Variables** in Bitbucket.
+
+### Multi-Environment Strategy
+One of the most powerful features of this setup is the ability to deploy to different Heroku apps based on the branch. For example:
+* **master**: Deploys to the production environment.
+* **staging**: Deploys to a staging site for external testing.
+* **development**: Deploys to a development site for internal review.
+
+This approach allows developers, clients, and testers to interact with dedicated versions of the application without interference.
+
+## Final Resources
+
+If you're looking for a reference implementation, you can check the [original repository](https://bitbucket.org/jean-182/ci-conceptual/src/develop/) for detailed deployment scripts, Rubocop configurations, and RSpec setups.
