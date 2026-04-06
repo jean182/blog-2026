@@ -1,4 +1,4 @@
-import { formatPostDate } from "@/lib/post";
+import { formatPostDate, getPrimaryCategory } from "@/lib/post";
 import { Post } from "@/types";
 import Link from "next/link";
 
@@ -15,6 +15,10 @@ export default function PostList({ posts }: { posts: Post[] }) {
 
           <p className="mt-3 text-[15px] italic text-(--muted)">
             {formatPostDate(frontmatter.date, "en")}
+            <span className="not-italic text-(--muted)"> · </span>
+            <span className="font-sans text-[13px] tracking-[0.01em] text-(--accent)">
+              {getPrimaryCategory(frontmatter.tags)}
+            </span>
           </p>
 
           <p className="mt-4 text-[17px] text-(--text) leading-relaxed max-w-120">
