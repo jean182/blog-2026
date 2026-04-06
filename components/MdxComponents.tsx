@@ -52,7 +52,7 @@ const Components: MDXComponents = {
     }
     return (
       <code
-        className="rounded bg-[#1a1c22] px-1.5 py-0.5 font-mono text-sm"
+        className="rounded border border-(--accent)/15 px-1.5 py-0.5 font-mono text-sm"
         {...props}
       >
         {children}
