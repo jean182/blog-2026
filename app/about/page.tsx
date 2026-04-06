@@ -3,7 +3,28 @@ import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "About Jean Aguilar and this blog.",
+  description: "About Jean Aguilar — software engineer from Costa Rica writing about software, films, and whatever else sticks.",
+  alternates: {
+    canonical: "https://loserkid.io/about",
+  },
+  openGraph: {
+    title: "About | loserkid",
+    description: "About Jean Aguilar — software engineer from Costa Rica writing about software, films, and whatever else sticks.",
+    url: "https://loserkid.io/about",
+    type: "profile",
+    images: [
+      {
+        url: "/profile-pic.jpg",
+        alt: "Jean Aguilar",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "About | loserkid",
+    description: "About Jean Aguilar — software engineer from Costa Rica writing about software, films, and whatever else sticks.",
+    images: ["/profile-pic.jpg"],
+  },
 };
 
 const LINKS = [
