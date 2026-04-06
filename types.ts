@@ -8,6 +8,12 @@ export interface PostSchema {
   author?: string;
 }
 
+export interface PostLinkedIn {
+  previewMaxChars?: number;
+  hashtags?: string[];
+  utm?: string;
+}
+
 export interface PostFrontmatter {
   title: string;
   slug: string;
@@ -19,6 +25,7 @@ export interface PostFrontmatter {
   canonical?: string;
   ogTitle?: string;
   ogDescription?: string;
+  linkedin?: PostLinkedIn;
   summaryBullets?: string[];
   toc?: boolean;
   schema?: PostSchema;

@@ -15,8 +15,8 @@ const LINKS = [
 
 export default function AboutPage() {
   return (
-    <div className="mt-16 max-w-130">
-      <div className="flex items-center gap-5 mb-10">
+    <div className="max-w-130">
+      <div className="flex items-center gap-5 mb-8">
         <Image
           src="/profile-pic.jpg"
           alt="Jean Aguilar"

@@ -8,6 +8,27 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://loserkid.io",
   },
+  openGraph: {
+    title: "loserkid",
+    description: "A blog about software, overthinking, and things that probably should've stayed in a draft.",
+    url: "https://loserkid.io",
+    siteName: "loserkid",
+    type: "website",
+    images: [
+      {
+        url: "/og-default.png",
+        alt: "loserkid",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "loserkid",
+    description: "A blog about software, overthinking, and things that probably should've stayed in a draft.",
+    site: "@jeanm182",
+    creator: "@jeanm182",
+    images: ["/og-default.png"],
+  },
 };
 
 export default async function HomePage() {
@@ -15,7 +36,7 @@ export default async function HomePage() {
   return (
     <>
       {/* INTRO */}
-      <div className="mt-10 mb-14 lg:mt-16 lg:mb-20">
+      <div className="mb-10 lg:mb-12">
         <p className="text-[16px] sm:text-[17px] lg:text-[18px] leading-relaxed text-(--muted) font-sans max-w-130">
           A blog about software, overthinking, and things that probably
           should've stayed in a draft.

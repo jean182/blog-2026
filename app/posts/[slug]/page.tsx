@@ -25,29 +25,47 @@ export async function generateMetadata({
   }
 
   const { frontmatter } = post;
+  const title = frontmatter.ogTitle ?? frontmatter.title;
+  const description = frontmatter.ogDescription ?? frontmatter.excerpt;
+  const canonical = frontmatter.canonical ?? `https://loserkid.io/posts/${slug}`;
+  const author = frontmatter.schema?.author ?? "Jean Aguilar";
+  const publisher = frontmatter.schema?.organization ?? "loserkid";
   const coverImage = frontmatter.cover?.src || "/og-default.png";
 
   return {
     title: frontmatter.title,
     description: frontmatter.excerpt,
     keywords: frontmatter.tags,
+    authors: [{ name: author, url: "https://loserkid.io/about" }],
+    creator: author,
+    publisher,
     openGraph: {
-      title: frontmatter.ogTitle ?? frontmatter.title,
-      description: frontmatter.ogDescription ?? frontmatter.excerpt,
+      title,
+      description,
+      url: canonical,
+      siteName: "loserkid",
       type: "article",
       publishedTime: frontmatter.date,
+      modifiedTime: frontmatter.updated ?? frontmatter.date,
+      authors: [author],
       tags: frontmatter.tags,
       images: [
         {
           url: coverImage,
-          width: 1200,
-          height: 630,
           alt: frontmatter.cover?.alt ?? frontmatter.title,
         },
       ],
     },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      site: "@jeanm182",
+      creator: "@jeanm182",
+      images: [coverImage],
+    },
     alternates: {
-      canonical: frontmatter.canonical,
+      canonical,
     },
   };
 }
