@@ -4,7 +4,16 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Configure `pageExtensions` to include markdown and MDX files
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
-  // Optionally, add any other Next.js config below
+  // Redirect old /posts/ URLs to new root URLs
+  async redirects() {
+    return [
+      {
+        source: "/posts/:slug",
+        destination: "/:slug",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 const withMDX = createMDX({
