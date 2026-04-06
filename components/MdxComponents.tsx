@@ -1,4 +1,5 @@
 import type { MDXComponents } from "mdx/types";
+import NextImage, { type ImageProps } from "next/image";
 import VideoPlayer from "@/components/VideoPlayer";
 
 const Components: MDXComponents = {
@@ -22,7 +23,10 @@ const Components: MDXComponents = {
     />
   ),
   h2: (props) => (
-    <h2 className="text-[20px] lg:text-[24px] font-semibold text-(--heading) mt-10 lg:mt-16 [&>a]:text-inherit [&>a]:no-underline" {...props} />
+    <h2
+      className="text-[20px] lg:text-[24px] font-semibold text-(--heading) mt-10 lg:mt-16 [&>a]:text-inherit [&>a]:no-underline"
+      {...props}
+    />
   ),
 
   a: (props) => (
@@ -32,7 +36,8 @@ const Components: MDXComponents = {
     />
   ),
   code: ({ className, children, ...props }: React.ComponentProps<"code">) => {
-    const isBlock = typeof className === "string" && className.startsWith("hljs");
+    const isBlock =
+      typeof className === "string" && className.startsWith("hljs");
     if (isBlock) {
       return (
         <code className={`${className} font-mono`} {...props}>
@@ -50,26 +55,55 @@ const Components: MDXComponents = {
     );
   },
   ul: (props) => (
-    <ul className="mt-6 ml-6 list-disc text-lg leading-relaxed text-(--text) [&>li]:mt-2" {...props} />
+    <ul
+      className="mt-6 ml-6 list-disc text-lg leading-relaxed text-(--text) [&>li]:mt-2"
+      {...props}
+    />
   ),
   ol: (props) => (
-    <ol className="mt-6 ml-6 list-decimal text-lg leading-relaxed text-(--text) [&>li]:mt-2" {...props} />
+    <ol
+      className="mt-6 ml-6 list-decimal text-lg leading-relaxed text-(--text) [&>li]:mt-2"
+      {...props}
+    />
   ),
-  li: (props) => (
-    <li className="leading-relaxed" {...props} />
-  ),
-  hr: () => (
-    <hr className="my-10 border-t border-(--accent)/25" />
-  ),
+  li: (props) => <li className="leading-relaxed" {...props} />,
+  hr: () => <hr className="my-10 border-t border-(--accent)/25" />,
   strong: (props) => (
     <strong className="font-semibold text-(--heading)" {...props} />
   ),
-  em: (props) => (
-    <em className="italic" {...props} />
-  ),
+  em: (props) => <em className="italic" {...props} />,
   h3: (props) => (
-    <h3 className="text-[18px] lg:text-[20px] font-semibold text-(--heading) mt-8 lg:mt-12 [&>a]:text-inherit [&>a]:no-underline" {...props} />
+    <h3
+      className="text-[18px] lg:text-[20px] font-semibold text-(--heading) mt-8 lg:mt-12 [&>a]:text-inherit [&>a]:no-underline"
+      {...props}
+    />
   ),
+  Image: ({ className, alt = "", src, width, height, ...props }: ImageProps) => {
+    if (!src) return null;
+
+    const resolvedWidth = typeof width === "string" ? Number(width) : width;
+    const resolvedHeight = typeof height === "string" ? Number(height) : height;
+    const aspectRatio = resolvedWidth && resolvedHeight ? `${resolvedWidth} / ${resolvedHeight}` : "16 / 9";
+
+    return (
+      <figure className="my-8">
+        <div
+          className="relative w-full overflow-hidden rounded-xl border border-(--accent)/15 bg-(--surface)"
+          style={{ aspectRatio }}
+        >
+          <NextImage
+            src={src}
+            alt={alt}
+            fill
+            sizes="(max-width: 768px) 100vw, 680px"
+            className={`object-cover ${className ?? ""}`}
+            {...props}
+          />
+        </div>
+        {alt ? <figcaption className="mt-2 text-sm text-(--muted)">{alt}</figcaption> : null}
+      </figure>
+    );
+  },
   VideoPlayer,
 };
 
