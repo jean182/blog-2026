@@ -16,28 +16,48 @@ export default function TableOfContents({ headings }: TableOfContentsProps) {
   const [activeId, setActiveId] = useState<string>("");
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveId(entry.target.id);
-          }
-        }
-      },
-      { rootMargin: "0px 0px -75% 0px", threshold: 0 },
-    );
+    function updateActiveId() {
+      const headingElements = headings
+        .map((heading) => document.getElementById(heading.id))
+        .filter((el): el is HTMLElement => Boolean(el));
 
-    for (const heading of headings) {
-      const el = document.getElementById(heading.id);
-      if (el) observer.observe(el);
+      if (headingElements.length === 0) return;
+
+      const offset = 140;
+      const scrollPosition = window.scrollY + offset;
+      const isNearPageBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 48;
+
+      if (isNearPageBottom) {
+        setActiveId(headingElements[headingElements.length - 1].id);
+        return;
+      }
+
+      let currentId = headingElements[0].id;
+
+      for (const el of headingElements) {
+        if (el.offsetTop <= scrollPosition) {
+          currentId = el.id;
+        } else {
+          break;
+        }
+      }
+
+      setActiveId(currentId);
     }
 
-    return () => observer.disconnect();
+    updateActiveId();
+    window.addEventListener("scroll", updateActiveId, { passive: true });
+    window.addEventListener("resize", updateActiveId);
+
+    return () => {
+      window.removeEventListener("scroll", updateActiveId);
+      window.removeEventListener("resize", updateActiveId);
+    };
   }, [headings]);
 
   return (
     <nav aria-label="Table of contents">
-      <p className="text-xs font-semibold uppercase tracking-widest text-(--muted) mb-4">
+      <p className="mb-4 font-sans text-xs font-semibold uppercase tracking-widest text-(--muted)">
         On this page
       </p>
       <ul className="space-y-2 border-l border-(--accent)/25 pl-4">
@@ -45,8 +65,9 @@ export default function TableOfContents({ headings }: TableOfContentsProps) {
           <li key={heading.id}>
             <a
               href={`#${heading.id}`}
+              onClick={() => setActiveId(heading.id)}
               className={[
-                "block text-[13px] leading-snug transition-colors duration-150",
+                "block font-sans text-sm leading-snug transition-colors duration-150",
                 heading.level === 3 ? "ml-3" : "",
                 activeId === heading.id
                   ? "text-(--accent)"

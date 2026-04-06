@@ -1,5 +1,6 @@
 import type { Post, PostFrontmatter } from "@/types";
 import fs from "fs";
+import GithubSlugger from "github-slugger";
 import matter from "gray-matter";
 import path from "path";
 import readingTime from "reading-time";
@@ -68,12 +69,17 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
 export function extractHeadings(content: string) {
   const headingRegex = /^(#{2,3})\s+(.+)$/gm;
   const headings: Array<{ level: number; text: string; id: string }> = [];
+  const slugger = new GithubSlugger();
 
   let match;
   while ((match = headingRegex.exec(content)) !== null) {
     const level = match[1].length;
-    const text = match[2];
-    const id = text.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const text = match[2]
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/[*_~]/g, "")
+      .trim();
+    const id = slugger.slug(text);
 
     headings.push({ level, text, id });
   }

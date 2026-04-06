@@ -37,7 +37,7 @@ export default async function HomePage() {
     <>
       {/* INTRO */}
       <div className="mb-10 lg:mb-12">
-        <p className="text-[16px] sm:text-[17px] lg:text-[18px] leading-relaxed text-(--muted) font-sans max-w-130">
+        <p className="max-w-130 text-base leading-relaxed text-(--muted) font-sans lg:text-lg">
           A blog about software, overthinking, and things that probably
           should've stayed in a draft.
         </p>

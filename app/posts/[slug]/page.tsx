@@ -72,11 +72,21 @@ export async function generateMetadata({
 
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const [post, posts] = await Promise.all([getPostBySlug(slug), getAllPosts()]);
 
   if (!post) {
     notFound();
   }
 
-  return <Post post={post} />;
+  const currentIndex = posts.findIndex((entry) => entry.slug === slug);
+  const newerPost = currentIndex > 0 ? posts[currentIndex - 1] : null;
+  const olderPost = currentIndex >= 0 && currentIndex < posts.length - 1 ? posts[currentIndex + 1] : null;
+
+  return (
+    <Post
+      post={post}
+      newerPost={newerPost ? { slug: newerPost.slug, title: newerPost.frontmatter.title } : null}
+      olderPost={olderPost ? { slug: olderPost.slug, title: olderPost.frontmatter.title } : null}
+    />
+  );
 }

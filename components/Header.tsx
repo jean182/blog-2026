@@ -7,6 +7,7 @@ const NAV_ITEMS = [{ href: "/about", label: "about" }];
 
 export default function Header() {
   const pathname = usePathname();
+  const isActive = (href: string) => pathname === href;
 
   return (
     <header className="w-full px-6 py-8 mx-auto max-w-170 lg:mx-0 lg:ml-32 xl:ml-48">
@@ -14,7 +15,7 @@ export default function Header() {
         {/* LOGO */}
         <Link
           href="/"
-          className="text-[18px] font-medium tracking-tight text-(--heading) transition-colors hover:opacity-80"
+          className="text-lg font-medium tracking-tight transition-colors text-(--accent) hover:opacity-80"
         >
           loserkid
         </Link>
@@ -22,17 +23,15 @@ export default function Header() {
         {/* NAV */}
         <nav className="flex gap-6 text-sm font-normal">
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href;
-
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={[
                   "transition-colors",
-                  isActive
-                    ? "text-(--accent) hover:opacity-80"
-                    : "text-(--muted) hover:text-(--heading)",
+                  isActive(item.href)
+                    ? "text-(--heading) hover:opacity-80"
+                    : "text-(--muted) hover:opacity-80",
                 ].join(" ")}
               >
                 {item.label}

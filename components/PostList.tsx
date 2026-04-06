@@ -8,20 +8,20 @@ export default function PostList({ posts }: { posts: Post[] }) {
       {posts.map(({ frontmatter }) => (
         <article key={frontmatter.slug}>
           <Link href={`/posts/${frontmatter.slug}`} className="group hover:underline hover:decoration-(--accent) hover:underline-offset-4">
-            <h2 className="text-[24px] sm:text-[28px] lg:text-[34px] font-semibold leading-[1.15] tracking-[-0.02em] text-(--heading) transition-colors duration-200 group-hover:text-(--accent)">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold leading-[1.15] tracking-tight text-(--heading) transition-colors duration-200 group-hover:text-(--accent)">
               {frontmatter.title}
             </h2>
           </Link>
 
-          <p className="mt-3 text-[15px] italic text-(--muted)">
+          <p className="mt-3 text-sm italic text-(--muted)">
             {formatPostDate(frontmatter.date, "en")}
-            <span className="not-italic text-(--muted)"> · </span>
-            <span className="font-sans text-[13px] tracking-[0.01em] text-(--accent)">
+            <span className="not-italic"> · </span>
+            <span className="font-sans text-sm">
               {getPrimaryCategory(frontmatter.tags)}
             </span>
           </p>
 
-          <p className="mt-4 text-[17px] text-(--text) leading-relaxed max-w-120">
+          <p className="mt-4 max-w-120 text-base leading-relaxed text-(--text) lg:text-lg">
             {frontmatter.ogDescription}
           </p>
         </article>

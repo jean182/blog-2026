@@ -5,7 +5,7 @@ import VideoPlayer from "@/components/VideoPlayer";
 const Components: MDXComponents = {
   blockquote: (props) => (
     <blockquote
-      className="my-8 border-l-2 border-(--accent) pl-5 text-[17px] leading-relaxed text-(--text)"
+      className="my-8 border-l-2 border-(--accent) pl-5 text-lg leading-relaxed text-(--text)"
       {...props}
     >
       <div className="[&>p:first-child]:mt-0 [&>p:last-child]:mb-0">
@@ -18,17 +18,22 @@ const Components: MDXComponents = {
   ),
   h1: (props) => (
     <h1
-      className="text-[28px] sm:text-[36px] lg:text-[42px] font-semibold tracking-[-0.02em] leading-[1.1] text-(--heading) mt-10 lg:mt-16 [&>a]:text-inherit [&>a]:no-underline"
+      className="mt-10 text-3xl font-semibold tracking-tight leading-tight text-(--heading) lg:mt-16 lg:text-4xl [&>a]:text-inherit [&>a]:no-underline"
       {...props}
     />
   ),
   h2: (props) => (
     <h2
-      className="text-[20px] lg:text-[24px] font-semibold text-(--heading) mt-10 lg:mt-16 [&>a]:text-inherit [&>a]:no-underline"
+      className="mt-10 text-2xl font-semibold tracking-tight text-(--heading) lg:mt-16 [&>a]:text-inherit [&>a]:no-underline"
       {...props}
     />
   ),
-
+  h3: (props) => (
+    <h3
+      className="mt-8 text-xl font-semibold text-(--heading) lg:mt-12 [&>a]:text-inherit [&>a]:no-underline"
+      {...props}
+    />
+  ),
   a: (props) => (
     <a
       className="text-(--link) underline underline-offset-4 hover:opacity-80"
@@ -47,7 +52,7 @@ const Components: MDXComponents = {
     }
     return (
       <code
-        className="px-1.5 py-0.5 rounded bg-[#1a1c22] font-mono text-[0.9em]"
+        className="rounded bg-[#1a1c22] px-1.5 py-0.5 font-mono text-sm"
         {...props}
       >
         {children}
@@ -72,12 +77,6 @@ const Components: MDXComponents = {
     <strong className="font-semibold text-(--heading)" {...props} />
   ),
   em: (props) => <em className="italic" {...props} />,
-  h3: (props) => (
-    <h3
-      className="text-[18px] lg:text-[20px] font-semibold text-(--heading) mt-8 lg:mt-12 [&>a]:text-inherit [&>a]:no-underline"
-      {...props}
-    />
-  ),
   Image: ({ className, alt = "", src, width, height, ...props }: ImageProps) => {
     if (!src) return null;
 
