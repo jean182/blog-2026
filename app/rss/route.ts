@@ -8,8 +8,8 @@ export async function GET() {
     .map(
       (post) => `    <item>
       <title><![CDATA[${post.frontmatter.title}]]></title>
-      <link>${siteUrl}/posts/${post.slug}</link>
-      <guid isPermaLink="true">${siteUrl}/posts/${post.slug}</guid>
+      <link>${siteUrl}/${post.slug}</link>
+      <guid isPermaLink="true">${siteUrl}/${post.slug}</guid>
       <description><![CDATA[${post.frontmatter.excerpt}]]></description>
       <pubDate>${new Date(post.frontmatter.date).toUTCString()}</pubDate>
     </item>`

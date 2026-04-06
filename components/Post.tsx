@@ -56,7 +56,7 @@ export default function BlogPost({ post, newerPost, olderPost }: PostProps) {
           <nav aria-label="More posts" className="mt-12 border-t border-(--accent)/25 pt-8">
             <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
               {olderPost ? (
-                <Link href={`/posts/${olderPost.slug}`} className="group block order-2 lg:order-1">
+                <Link href={`/${olderPost.slug}`} className="group block order-2 lg:order-1">
                   <p className="font-sans text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-(--muted)">
                     Previous
                   </p>
@@ -67,7 +67,7 @@ export default function BlogPost({ post, newerPost, olderPost }: PostProps) {
               ) : <div className="hidden lg:block" />}
 
               {newerPost ? (
-                <Link href={`/posts/${newerPost.slug}`} className="group block order-1 lg:order-2 lg:text-right">
+                <Link href={`/${newerPost.slug}`} className="group block order-1 lg:order-2 lg:text-right">
                   <p className="font-sans text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-(--muted)">
                     Next post
                   </p>

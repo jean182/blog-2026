@@ -27,7 +27,7 @@ export async function generateMetadata({
   const { frontmatter } = post;
   const title = frontmatter.ogTitle ?? frontmatter.title;
   const description = frontmatter.ogDescription ?? frontmatter.excerpt;
-  const canonical = frontmatter.canonical ?? `https://loserkid.io/posts/${slug}`;
+  const canonical = frontmatter.canonical ?? `https://loserkid.io/${slug}`;
   const author = frontmatter.schema?.author ?? "Jean Aguilar";
   const publisher = frontmatter.schema?.organization ?? "loserkid";
   const coverImage = frontmatter.cover?.src || "/og-default.png";

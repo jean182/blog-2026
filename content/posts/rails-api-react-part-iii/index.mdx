@@ -8,7 +8,7 @@ cover:
   src: "/posts/rails-api-react-part-iii/movies-routes.png"
   alt: "Namespaced movie routes in Rails"
 tags: ["Rails", "React", "API", "RSpec", "Testing"]
-canonical: "https://loserkid.io/posts/rails-api-react-part-iii"
+canonical: "https://loserkid.io/rails-api-react-part-iii"
 ogTitle: "Building a Movie Resource: Rails API for React, Part III"
 ogDescription: "A deep dive into namespaced Rails controllers, model testing with Shoulda Matchers, and configuring Serializers for clean API responses."
 linkedin:
@@ -32,9 +32,9 @@ schema:
 In the third part of this series, we shift our focus back to the Rails backend to implement our first core resource: Movies. We'll ensure our architecture is ready for scale by using proper namespacing and a robust testing suite.
 
 More on this series:
-* [Part I: The Foundation](/posts/rails-api-react-part-i/)
-* [Part II: React Frontend Setup](/posts/rails-api-react-part-ii/)
-* [Part IV: Data Fetching with React](/posts/rails-api-react-part-iv/)
+* [Part I: The Foundation](/rails-api-react-part-i/)
+* [Part II: React Frontend Setup](/rails-api-react-part-ii/)
+* [Part IV: Data Fetching with React](/rails-api-react-part-iv/)
 
 ## 1. Namespaced Routing
 
@@ -94,7 +94,7 @@ end
 ```
 
 ### Testing with Shoulda Matchers
-Using the gems we added in [Part I](/posts/rails-api-react-part-i/), we can write expressive, one-liner tests in `spec/models/movie_spec.rb`:
+Using the gems we added in [Part I](/rails-api-react-part-i/), we can write expressive, one-liner tests in `spec/models/movie_spec.rb`:
 
 ```ruby
 RSpec.describe Movie, type: :model do

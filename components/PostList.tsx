@@ -7,7 +7,7 @@ export default function PostList({ posts }: { posts: Post[] }) {
     <div className="divide-y divide-(--accent)/25 [&>article]:py-12 [&>article:first-child]:pt-0 [&>article:last-child]:pb-0">
       {posts.map(({ frontmatter }) => (
         <article key={frontmatter.slug}>
-          <Link href={`/posts/${frontmatter.slug}`} className="group hover:underline hover:decoration-(--accent) hover:underline-offset-4">
+          <Link href={`/${frontmatter.slug}`} className="group hover:underline hover:decoration-(--accent) hover:underline-offset-4">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold leading-[1.15] tracking-tight text-(--heading) transition-colors duration-200 group-hover:text-(--accent)">
               {frontmatter.title}
             </h2>
