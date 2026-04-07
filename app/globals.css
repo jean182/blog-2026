@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+/* Enable smooth transitions for gradient colors */
+@property --logo-from {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f3f4f6;
+}
+
+@property --logo-to {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #7fa38d;
+}
+
 /* === DESIGN TOKENS === */
 
 :root {
@@ -11,6 +24,10 @@
   --muted: #9aa0a6;
   --accent: #7fa38d;
   --link: #3b82f6;
+
+  /* Logo gradient */
+  --logo-from: #f3f4f6;
+  --logo-to: #7fa38d;
 
   /* Type scale (1rem = 16px, aligned with Tailwind) */
   --text-sm: 0.875rem;
@@ -44,6 +61,8 @@
     --muted: #6b6f76;
     --accent: #2f5d8a;
     --link: #1d4ed8;
+    --logo-from: #374151;
+    --logo-to: #2f5d8a;
   }
 }
 
@@ -55,6 +74,10 @@
   --muted: #6b6f76;
   --accent: #2f5d8a;
   --link: #1d4ed8;
+
+  /* Logo gradient */
+  --logo-from: #374151;
+  --logo-to: #2f5d8a;
 }
 
 /* === BASE STYLES === */
@@ -62,6 +85,7 @@
 @layer base {
   html {
     background-color: var(--bg);
+    transition: --logo-from 0.3s ease, --logo-to 0.3s ease, background-color 0.3s ease;
   }
 
   body {
@@ -70,6 +94,7 @@
     font-family: Georgia, Cambria, "Times New Roman", serif;
     font-size: var(--text-base);
     line-height: var(--leading-body);
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   p {

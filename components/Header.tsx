@@ -85,13 +85,19 @@ export default function Header() {
   const pathname = usePathname();
   const isActive = (href: string) => pathname === href;
 
+  // Logo uses CSS variables for smooth theme transition
+  const logoClass = "text-xl font-bold bg-clip-text text-transparent hover:opacity-80 transition-all duration-300";
+
   return (
     <header className="w-full px-6 py-8 mx-auto max-w-170 lg:mx-0 lg:ml-32 xl:ml-48">
       <div className="flex justify-between items-center">
         {/* LOGO */}
         <Link
           href="/"
-          className="text-lg font-medium tracking-tight transition-colors text-(--accent) hover:opacity-80"
+          className={`tracking-tight ${logoClass}`}
+          style={{
+            backgroundImage: "linear-gradient(to right, var(--logo-from), var(--logo-to))",
+          }}
         >
           loserkid
         </Link>
