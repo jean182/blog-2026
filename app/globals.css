@@ -3,7 +3,7 @@
 /* === DESIGN TOKENS === */
 
 :root {
-  /* Color */
+  /* Color - Dark theme (default) */
   --bg: #0e0f12;
   --surface: #14161c;
   --text: #e8e8ea;
@@ -33,9 +33,10 @@
   --space-16: 4rem;
 }
 
-/* Optional light mode later */
-@media (prefers-color-scheme: light) {
-  :root {
+/* Light theme - applied via class or system preference */
+:root.light,
+:root:not(.dark):not(.light) {
+  @media (prefers-color-scheme: light) {
     --bg: #f7f7f5;
     --surface: #ffffff;
     --text: #1c1c1c;
@@ -44,6 +45,16 @@
     --accent: #2f5d8a;
     --link: #1d4ed8;
   }
+}
+
+:root.light {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --text: #1c1c1c;
+  --heading: #111111;
+  --muted: #6b6f76;
+  --accent: #2f5d8a;
+  --link: #1d4ed8;
 }
 
 /* === BASE STYLES === */

@@ -58,8 +58,23 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Inline script to prevent flash on load
+  const themeScript = `
+    (function() {
+      try {
+        var theme = localStorage.getItem('theme');
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.classList.add(theme);
+        }
+      } catch (e) {}
+    })();
+  `;
+
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
         <Analytics />
         <FirstInteractionTracker>
