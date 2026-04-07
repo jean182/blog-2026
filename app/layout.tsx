@@ -6,6 +6,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HashLinkFix from "@/components/HashLinkFix";
 import Analytics from "@/components/Analytics";
+import ScrollTracker from "@/components/ScrollTracker";
+import OutboundTracker from "@/components/OutboundTracker";
 
 export const viewport: Viewport = {
   themeColor: "#0e0f12",
@@ -59,6 +61,8 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Analytics />
+        <ScrollTracker />
+        <OutboundTracker />
         <div className="min-h-screen">
           {/* HEADER */}
           <Header />

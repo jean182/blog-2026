@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { analytics } from "@/lib/analytics";
 
 interface Heading {
   level: number;
@@ -65,7 +66,10 @@ export default function TableOfContents({ headings }: TableOfContentsProps) {
           <li key={heading.id}>
             <a
               href={`#${heading.id}`}
-              onClick={() => setActiveId(heading.id)}
+              onClick={() => {
+                setActiveId(heading.id);
+                analytics.tocClick(heading.text);
+              }}
               className={[
                 "block font-sans text-sm leading-snug transition-colors duration-150",
                 heading.level === 3 ? "ml-3" : "",

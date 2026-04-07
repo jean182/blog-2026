@@ -78,15 +78,46 @@ export default async function PostPage({ params }: PostPageProps) {
     notFound();
   }
 
+  const { frontmatter } = post;
   const currentIndex = posts.findIndex((entry) => entry.slug === slug);
   const newerPost = currentIndex > 0 ? posts[currentIndex - 1] : null;
   const olderPost = currentIndex >= 0 && currentIndex < posts.length - 1 ? posts[currentIndex + 1] : null;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: frontmatter.title,
+    description: frontmatter.excerpt,
+    image: frontmatter.cover?.src || "/og-default.png",
+    datePublished: frontmatter.date,
+    dateModified: frontmatter.updated ?? frontmatter.date,
+    author: {
+      "@type": "Person",
+      name: "Jean Aguilar",
+      url: "https://loserkid.io/about",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "loserkid",
+      url: "https://loserkid.io",
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://loserkid.io/${slug}`,
+    },
+  };
+
   return (
-    <Post
-      post={post}
-      newerPost={newerPost ? { slug: newerPost.slug, title: newerPost.frontmatter.title } : null}
-      olderPost={olderPost ? { slug: olderPost.slug, title: olderPost.frontmatter.title } : null}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <Post
+        post={post}
+        newerPost={newerPost ? { slug: newerPost.slug, title: newerPost.frontmatter.title } : null}
+        olderPost={olderPost ? { slug: olderPost.slug, title: olderPost.frontmatter.title } : null}
+      />
+    </>
   );
 }
