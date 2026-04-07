@@ -8,6 +8,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import {
   AnalyticsEvent,
   type ArticleContext,
@@ -47,7 +48,7 @@ export function ArticleProvider({
 
   return (
     <ArticleContextValue.Provider value={value}>
-      <FirstInteractionTracker>{children}</FirstInteractionTracker>
+      {children}
     </ArticleContextValue.Provider>
   );
 }
@@ -140,17 +141,18 @@ export function useTrackEvent() {
   );
 }
 
-// First interaction tracker component
-function FirstInteractionTracker({ children }: { children: ReactNode }) {
+// First interaction tracker component - use in layout for global tracking
+export function FirstInteractionTracker({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const articleContext = useContext(ArticleContextValue);
   const hasTrackedRef = useRef(false);
   const loadTimeRef = useRef<number>(0);
 
-  // Reset tracking state when article changes
+  // Reset tracking state on navigation
   useEffect(() => {
     hasTrackedRef.current = false;
     loadTimeRef.current = Date.now();
-  }, [articleContext?.article_slug]);
+  }, [pathname]);
 
   const trackFirstInteraction = useCallback(
     (type: InteractionType) => {

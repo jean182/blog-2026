@@ -24,4 +24,5 @@ export {
   trackEvent,
   notifyFirstInteraction,
   getTimeSincePageLoad,
+  FirstInteractionTracker,
 } from "./context";

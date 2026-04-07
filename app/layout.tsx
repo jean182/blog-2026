@@ -8,6 +8,7 @@ import HashLinkFix from "@/components/HashLinkFix";
 import Analytics from "@/components/Analytics";
 import ScrollTracker from "@/components/ScrollTracker";
 import OutboundTracker from "@/components/OutboundTracker";
+import { FirstInteractionTracker } from "@/lib/analytics";
 
 export const viewport: Viewport = {
   themeColor: "#0e0f12",
@@ -61,19 +62,21 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Analytics />
-        <ScrollTracker />
-        <OutboundTracker />
-        <div className="min-h-screen">
-          {/* HEADER */}
-          <Header />
-          <HashLinkFix />
+        <FirstInteractionTracker>
+          <ScrollTracker />
+          <OutboundTracker />
+          <div className="min-h-screen">
+            {/* HEADER */}
+            <Header />
+            <HashLinkFix />
 
-          {/* MAIN */}
-          <main className="px-6 mx-auto max-w-170 lg:mx-0 lg:ml-32 xl:ml-48">{children}</main>
+            {/* MAIN */}
+            <main className="px-6 mx-auto max-w-170 lg:mx-0 lg:ml-32 xl:ml-48">{children}</main>
 
-          {/* FOOTER */}
-          <Footer />
-        </div>
+            {/* FOOTER */}
+            <Footer />
+          </div>
+        </FirstInteractionTracker>
       </body>
     </html>
   );
