@@ -1,13 +1,30 @@
-import { formatPostDate, getPrimaryCategory } from "@/lib/post";
+"use client";
+
+import { formatPostDate, getPrimaryCategory } from "@/lib/post-utils";
 import { Post } from "@/types";
 import Link from "next/link";
+import { AnalyticsEvent, trackEvent } from "@/lib/analytics";
 
 export default function PostList({ posts }: { posts: Post[] }) {
+  const handlePostClick = (slug: string, title: string, position: number) => {
+    trackEvent(AnalyticsEvent.PostListClicked, {
+      post_slug: slug,
+      post_title: title,
+      position,
+    });
+  };
+
   return (
     <div className="divide-y divide-(--accent)/25 [&>article]:py-12 [&>article:first-child]:pt-0 [&>article:last-child]:pb-0">
-      {posts.map(({ frontmatter }) => (
+      {posts.map(({ frontmatter }, index) => (
         <article key={frontmatter.slug}>
-          <Link href={`/${frontmatter.slug}`} className="group hover:underline hover:decoration-(--accent) hover:underline-offset-4">
+          <Link
+            href={`/${frontmatter.slug}`}
+            onClick={() =>
+              handlePostClick(frontmatter.slug, frontmatter.title, index + 1)
+            }
+            className="group hover:underline hover:decoration-(--accent) hover:underline-offset-4"
+          >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold leading-[1.15] tracking-tight text-(--heading) transition-colors duration-200 group-hover:text-(--accent)">
               {frontmatter.title}
             </h2>

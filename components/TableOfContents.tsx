@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { analytics } from "@/lib/analytics";
+import {
+  AnalyticsEvent,
+  useTrackEvent,
+  notifyFirstInteraction,
+} from "@/lib/analytics";
 
 interface Heading {
   level: number;
@@ -15,6 +19,7 @@ interface TableOfContentsProps {
 
 export default function TableOfContents({ headings }: TableOfContentsProps) {
   const [activeId, setActiveId] = useState<string>("");
+  const trackEvent = useTrackEvent();
 
   useEffect(() => {
     function updateActiveId() {
@@ -26,7 +31,9 @@ export default function TableOfContents({ headings }: TableOfContentsProps) {
 
       const offset = 140;
       const scrollPosition = window.scrollY + offset;
-      const isNearPageBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 48;
+      const isNearPageBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 48;
 
       if (isNearPageBottom) {
         setActiveId(headingElements[headingElements.length - 1].id);
@@ -56,6 +63,15 @@ export default function TableOfContents({ headings }: TableOfContentsProps) {
     };
   }, [headings]);
 
+  const handleTocClick = (heading: Heading) => {
+    setActiveId(heading.id);
+    notifyFirstInteraction("click");
+    trackEvent(AnalyticsEvent.TocItemClicked, {
+      heading_text: heading.text,
+      heading_level: heading.level,
+    });
+  };
+
   return (
     <nav aria-label="Table of contents">
       <p className="mb-4 font-sans text-xs font-semibold uppercase tracking-widest text-(--muted)">
@@ -66,10 +82,7 @@ export default function TableOfContents({ headings }: TableOfContentsProps) {
           <li key={heading.id}>
             <a
               href={`#${heading.id}`}
-              onClick={() => {
-                setActiveId(heading.id);
-                analytics.tocClick(heading.text);
-              }}
+              onClick={() => handleTocClick(heading)}
               className={[
                 "block font-sans text-sm leading-snug transition-colors duration-150",
                 heading.level === 3 ? "ml-3" : "",

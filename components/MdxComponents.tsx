@@ -1,8 +1,10 @@
 import type { MDXComponents } from "mdx/types";
 import NextImage, { type ImageProps } from "next/image";
 import VideoPlayer from "@/components/VideoPlayer";
+import CodeBlock from "@/components/CodeBlock";
 
 const Components: MDXComponents = {
+  pre: (props) => <CodeBlock {...props} />,
   blockquote: (props) => (
     <blockquote
       className="my-8 border-l-2 border-(--accent) pl-5 text-lg leading-relaxed text-(--text)"
@@ -77,12 +79,22 @@ const Components: MDXComponents = {
     <strong className="font-semibold text-(--heading)" {...props} />
   ),
   em: (props) => <em className="italic" {...props} />,
-  Image: ({ className, alt = "", src, width, height, ...props }: ImageProps) => {
+  Image: ({
+    className,
+    alt = "",
+    src,
+    width,
+    height,
+    ...props
+  }: ImageProps) => {
     if (!src) return null;
 
     const resolvedWidth = typeof width === "string" ? Number(width) : width;
     const resolvedHeight = typeof height === "string" ? Number(height) : height;
-    const aspectRatio = resolvedWidth && resolvedHeight ? `${resolvedWidth} / ${resolvedHeight}` : "16 / 9";
+    const aspectRatio =
+      resolvedWidth && resolvedHeight
+        ? `${resolvedWidth} / ${resolvedHeight}`
+        : "16 / 9";
 
     return (
       <figure className="my-8">
@@ -99,7 +111,9 @@ const Components: MDXComponents = {
             {...props}
           />
         </div>
-        {alt ? <figcaption className="mt-2 text-sm text-(--muted)">{alt}</figcaption> : null}
+        {alt ? (
+          <figcaption className="mt-2 text-sm text-(--muted)">{alt}</figcaption>
+        ) : null}
       </figure>
     );
   },

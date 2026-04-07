@@ -3,9 +3,11 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
-import Link from "next/link";
 import MDXComponents from "@/components/MdxComponents";
 import TableOfContents from "@/components/TableOfContents";
+import PostNavLink from "@/components/PostNavLink";
+import ArticleFeedback from "@/components/ArticleFeedback";
+import { ArticleProvider } from "@/lib/analytics";
 import { extractHeadings, formatPostDate } from "@/lib/post";
 import type { Post as PostType } from "@/types";
 
@@ -21,10 +23,11 @@ interface PostProps {
 }
 
 export default function BlogPost({ post, newerPost, olderPost }: PostProps) {
-  const { frontmatter, content, readingTime } = post;
+  const { frontmatter, content, readingTime, slug } = post;
   const headings = frontmatter.toc ? extractHeadings(content) : [];
+
   return (
-    <>
+    <ArticleProvider slug={slug} title={frontmatter.title}>
       <article className="max-w-170">
         {/* TITLE */}
         <h1 className="text-3xl sm:text-4xl lg:text-4xl font-semibold tracking-tight leading-tight text-(--heading)">
@@ -33,7 +36,8 @@ export default function BlogPost({ post, newerPost, olderPost }: PostProps) {
 
         {/* DATE */}
         <p className="mt-3 text-sm italic text-(--muted)">
-          {formatPostDate(frontmatter.date, "en")} <span className="text-(--accent)">·</span> {readingTime} min read
+          {formatPostDate(frontmatter.date, "en")}{" "}
+          <span className="text-(--accent)">·</span> {readingTime} min read
         </p>
         <div className="max-w-none">
           <MDXRemote
@@ -52,29 +56,31 @@ export default function BlogPost({ post, newerPost, olderPost }: PostProps) {
           />
         </div>
 
+        {/* FEEDBACK */}
+        <ArticleFeedback />
+
         {(newerPost || olderPost) && (
-          <nav aria-label="More posts" className="mt-12 border-t border-(--accent)/25 pt-8">
+          <nav
+            aria-label="More posts"
+            className="mt-12 border-t border-(--accent)/25 pt-8"
+          >
             <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
               {olderPost ? (
-                <Link href={`/${olderPost.slug}`} className="group block order-2 lg:order-1">
-                  <p className="font-sans text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-(--muted)">
-                    Previous
-                  </p>
-                  <p className="mt-2 text-base leading-snug text-(--muted) transition-colors group-hover:text-(--heading) lg:text-lg">
-                    {olderPost.title}
-                  </p>
-                </Link>
-              ) : <div className="hidden lg:block" />}
+                <PostNavLink
+                  href={`/${olderPost.slug}`}
+                  direction="older"
+                  title={olderPost.title}
+                />
+              ) : (
+                <div className="hidden lg:block" />
+              )}
 
               {newerPost ? (
-                <Link href={`/${newerPost.slug}`} className="group block order-1 lg:order-2 lg:text-right">
-                  <p className="font-sans text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-(--muted)">
-                    Next post
-                  </p>
-                  <p className="mt-2 text-lg leading-snug text-(--heading) transition-colors group-hover:text-(--accent) lg:text-xl">
-                    {newerPost.title}
-                  </p>
-                </Link>
+                <PostNavLink
+                  href={`/${newerPost.slug}`}
+                  direction="newer"
+                  title={newerPost.title}
+                />
               ) : null}
             </div>
           </nav>
@@ -87,6 +93,6 @@ export default function BlogPost({ post, newerPost, olderPost }: PostProps) {
           <TableOfContents headings={headings} />
         </aside>
       )}
-    </>
+    </ArticleProvider>
   );
 }
