@@ -1,5 +1,6 @@
 import type { MDXComponents } from "mdx/types";
 import NextImage, { type ImageProps } from "next/image";
+import Link from "next/link";
 import VideoPlayer from "@/components/VideoPlayer";
 import CodeBlock from "@/components/CodeBlock";
 
@@ -36,12 +37,30 @@ const Components: MDXComponents = {
       {...props}
     />
   ),
-  a: (props) => (
-    <a
-      className="text-(--link) underline underline-offset-4 hover:opacity-80"
-      {...props}
-    />
-  ),
+  a: ({ href, children, ...props }: React.ComponentProps<"a">) => {
+    const isInternal = href?.startsWith("/") || href?.startsWith("#");
+    const className = "text-(--link) underline underline-offset-4 hover:opacity-80";
+    
+    if (isInternal && href) {
+      return (
+        <Link href={href} className={className} {...props}>
+          {children}
+        </Link>
+      );
+    }
+    
+    return (
+      <a
+        href={href}
+        className={className}
+        target="_blank"
+        rel="noopener noreferrer"
+        {...props}
+      >
+        {children}
+      </a>
+    );
+  },
   code: ({ className, children, ...props }: React.ComponentProps<"code">) => {
     const isBlock =
       typeof className === "string" && className.startsWith("hljs");

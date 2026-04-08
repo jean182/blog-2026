@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { ViewTransition } from "react";
 import "./globals.css";
 import "./code-blocks.css";
 import "highlight.js/styles/github-dark-dimmed.css";
@@ -58,20 +59,28 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Inline script to prevent flash on load
+  // Inline script to prevent flash on load - ALWAYS sets class + background color
   const themeScript = `
     (function() {
+      var DARK_BG = '#0e0f12';
+      var LIGHT_BG = '#f7f7f5';
       try {
-        var theme = localStorage.getItem('theme');
-        if (theme === 'light' || theme === 'dark') {
-          document.documentElement.classList.add(theme);
-        }
-      } catch (e) {}
+        var stored = localStorage.getItem('theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        // Always set a class - either from storage or system preference
+        var theme = stored || (prefersDark ? 'dark' : 'light');
+        document.documentElement.classList.add(theme);
+        document.documentElement.style.backgroundColor = theme === 'light' ? LIGHT_BG : DARK_BG;
+      } catch (e) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.style.backgroundColor = DARK_BG;
+      }
     })();
   `;
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning style={{ backgroundColor: '#0e0f12' }}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
@@ -86,7 +95,9 @@ export default function RootLayout({
             <HashLinkFix />
 
             {/* MAIN */}
-            <main className="px-6 mx-auto max-w-170 lg:mx-0 lg:ml-32 xl:ml-48">{children}</main>
+            <main className="px-6 mx-auto max-w-170 lg:mx-0 lg:ml-32 xl:ml-48">
+              <ViewTransition>{children}</ViewTransition>
+            </main>
 
             {/* FOOTER */}
             <Footer />

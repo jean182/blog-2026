@@ -50,33 +50,18 @@ function MoonIcon({ className }: { className?: string }) {
 }
 
 function ThemeToggle() {
-  const { resolvedTheme, toggle } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const { toggle } = useTheme();
 
   return (
     <button
       onClick={toggle}
       className="relative p-1 w-6 h-6 text-(--muted) hover:opacity-80 transition-opacity cursor-pointer"
-      aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
+      aria-label="Toggle theme"
     >
-      {/* Sun - visible in dark mode, click to switch to light */}
-      <SunIcon
-        className={[
-          "absolute inset-0 m-auto w-4 h-4 transition-all duration-300",
-          isDark
-            ? "rotate-0 scale-100 opacity-100"
-            : "-rotate-90 scale-0 opacity-0",
-        ].join(" ")}
-      />
-      {/* Moon - visible in light mode, click to switch to dark */}
-      <MoonIcon
-        className={[
-          "absolute inset-0 m-auto w-4 h-4 transition-all duration-300",
-          isDark
-            ? "rotate-90 scale-0 opacity-0"
-            : "rotate-0 scale-100 opacity-100",
-        ].join(" ")}
-      />
+      {/* Sun - visible in dark mode (CSS-based, no JS wait) */}
+      <SunIcon className="absolute inset-0 m-auto w-4 h-4 transition-all duration-300 dark:rotate-0 dark:scale-100 dark:opacity-100 rotate-90 scale-0 opacity-0" />
+      {/* Moon - visible in light mode */}
+      <MoonIcon className="absolute inset-0 m-auto w-4 h-4 transition-all duration-300 dark:rotate-90 dark:scale-0 dark:opacity-0 rotate-0 scale-100 opacity-100" />
     </button>
   );
 }

@@ -49,7 +49,26 @@ function getServerSnapshot(): ResolvedTheme {
   return "dark";
 }
 
+// Mounted state via useSyncExternalStore (no setState needed)
+function getMountedSnapshot(): boolean {
+  return true;
+}
+
+function getMountedServerSnapshot(): boolean {
+  return false;
+}
+
+function subscribeNoop() {
+  return () => {};
+}
+
 export function useTheme() {
+  const mounted = useSyncExternalStore(
+    subscribeNoop,
+    getMountedSnapshot,
+    getMountedServerSnapshot
+  );
+
   const resolvedTheme = useSyncExternalStore(
     subscribe,
     getSnapshot,
@@ -68,5 +87,6 @@ export function useTheme() {
   return {
     resolvedTheme,
     toggle,
+    mounted,
   };
 }
