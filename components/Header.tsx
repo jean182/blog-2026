@@ -78,7 +78,7 @@ export default function Header() {
   const logoClass = "text-xl font-bold bg-clip-text text-transparent hover:opacity-80 transition-all duration-300";
 
   return (
-    <header className="w-full px-6 py-8 mx-auto max-w-170 lg:mx-0 lg:ml-32 xl:ml-48">
+    <header className="w-full px-6 py-8 lg:max-w-reading lg:ml-32 xl:ml-48">
       <div className="flex justify-between items-center">
         {/* LOGO */}
         <Link

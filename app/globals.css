@@ -97,6 +97,7 @@
   html {
     background-color: var(--bg);
     transition: --logo-from 0.3s ease, --logo-to 0.3s ease, background-color 0.3s ease;
+    overflow-x: clip;
   }
 
   body {
@@ -106,6 +107,7 @@
     font-size: var(--text-base);
     line-height: var(--leading-body);
     transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-x: clip;
   }
 
   p {

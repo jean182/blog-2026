@@ -28,7 +28,7 @@ export default function BlogPost({ post, newerPost, olderPost }: PostProps) {
 
   return (
     <ArticleProvider slug={slug} title={frontmatter.title}>
-      <article className="max-w-170">
+      <article>
         {/* TITLE */}
         <h1 className="text-3xl sm:text-4xl lg:text-4xl font-semibold tracking-tight leading-tight text-(--heading)">
           {frontmatter.title}

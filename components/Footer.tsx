@@ -6,7 +6,7 @@ const SOCIAL_LINKS = [
 
 export default function Footer() {
   return (
-    <footer className="px-6 mt-16 mb-12 mx-auto max-w-170 lg:mx-0 lg:ml-32 xl:ml-48">
+    <footer className="px-6 mt-16 mb-12 lg:max-w-reading lg:ml-32 xl:ml-48">
       <div className="border-t border-(--accent)/25 pt-8">
         <p className="text-sm text-(--muted) italic">
           Built with Next.js, MDX, and questionable taste.
