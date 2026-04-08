@@ -80,6 +80,7 @@ function sendToGA(eventName: string, params: Record<string, unknown>) {
       "color: #00ff00; font-weight: bold",
       params,
     );
+    return; // Don't send to GA in development
   }
 
   if (typeof window !== "undefined" && window.gtag) {

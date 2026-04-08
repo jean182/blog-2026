@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { ViewTransition } from "react";
 import "./globals.css";
-import "./code-blocks.css";
 import "highlight.js/styles/github-dark-dimmed.css";
+import "./code-blocks.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HashLinkFix from "@/components/HashLinkFix";
