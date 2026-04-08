@@ -91,6 +91,11 @@
   --logo-to: #7fa38d;
 }
 
+/* === TAILWIND V4 THEME EXTENSIONS === */
+@theme {
+  --max-width-reading: 680px;
+}
+
 /* === BASE STYLES === */
 
 @layer base {

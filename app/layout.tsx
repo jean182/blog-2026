@@ -74,7 +74,7 @@ export default function RootLayout({
               <HashLinkFix />
 
               {/* MAIN */}
-              <main className="flex-1 px-6 w-full lg:max-w-reading lg:ml-32 xl:ml-48">
+              <main className="flex-1 px-6 lg:max-w-reading lg:ml-32 xl:ml-48">
                 <ViewTransition>{children}</ViewTransition>
               </main>
 
