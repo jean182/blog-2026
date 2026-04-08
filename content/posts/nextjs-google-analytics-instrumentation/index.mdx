@@ -1,0 +1,133 @@
+---
+title: "How I instrumented my Next.js blog with Google Analytics (and what I actually track)"
+slug: "nextjs-google-analytics-instrumentation"
+date: "2026-04-08T04:23:00.000Z"
+updated: "2026-04-08"
+excerpt: "How I set up Google Analytics in a Next.js blog and the custom events I use to track real user behavior."
+cover:
+  src: ""
+  alt: "Next.js Google Analytics instrumentation and event tracking"
+tags: ["Next.js", "Google Analytics", "Analytics", "Web Development"]
+canonical: "https://loserkid.io/nextjs-google-analytics-instrumentation"
+ogTitle: "Instrumenting a Next.js blog with Google Analytics"
+ogDescription: "A practical breakdown of adding Google Analytics to a Next.js blog and tracking real user behavior with custom events."
+linkedin:
+  previewMaxChars: 950
+  hashtags: ["Next.js", "GoogleAnalytics", "WebDev", "Analytics"]
+  utm: "utm_source=linkedin&utm_medium=post"
+summaryBullets:
+  - "Setting up Google Analytics in a Next.js blog"
+  - "Tracking custom events like scroll depth and post completion"
+  - "Understanding what users actually do beyond page views"
+toc: true
+schema:
+  organization: "Personal Blog"
+  author: "Jean Aguilar"
+---
+
+I recently rebuilt my blog, moving from Gatsby to Next.js. As part of that revamp, I wanted to go beyond page views and actually understand what users were doing on the site.
+
+Working on products used at scale, you get used to the idea that almost everything is instrumented. Not in a creepy way, but in a way that helps answer simple questions: what do people use, what do they ignore, and what actually adds value.
+
+That kind of data lets you iterate and improve how you build things. So for this blog, I wanted to apply the same thinking and get a better sense of how people interact with the content.
+
+I ended up adding Google Analytics and building a small tracking layer to capture events like scroll depth and post completion—things that actually make sense for a blog.
+
+## Quick Setup
+
+I used Google Analytics (GA4) since my previous blog already had it and it’s simple enough for what I need.
+
+Integration with Next.js is straightforward using their recommended library <a href="https://nextjs.org/docs/app/guides/third-party-libraries" rel="noopener noreferrer" target="_blank">@next/third-parties</a>. It provides a `<GoogleAnalytics />` component where you pass your GA ID and it handles the rest. I placed it in the root layout so it’s available across all routes.
+
+Instead of using `sendGAEvent` directly, I built a small wrapper around `gtag`. I wanted a bit more control: TypeScript catching event name typos, automatic blocking in development so I don’t pollute data with localhost traffic, and injecting article context (slug, title) into every event without repeating it everywhere. This made defining tracking events much cleaner.
+
+
+## Which Events I'm Tracking
+
+Google Analytics already tracks page views, but for a blog that’s not very useful—you don’t really know what the user did on the page.
+
+### First interaction
+
+I track the first interaction to understand how users engage with the page initially.
+
+If the first action is scrolling, it likely means they started reading right away. If it’s a click, it might mean they jumped directly to a section via the Table of Contents or interacted with something else.
+
+### How far do people actually read?
+
+I use a custom event called `scroll_depth_reached` that fires when a user scrolls past certain thresholds. This helps me understand how far someone got in the article.
+
+The thresholds I use are: `25 | 50 | 75 | 90 | 100`.
+
+This gives a rough idea of where people drop off, instead of just knowing they visited.
+
+### Do people actually finish the article?
+
+Scroll depth is useful, but reaching the bottom doesn’t necessarily mean someone actually read the post.
+
+I added a separate `post_completed` event instead of relying on `scroll_depth_reached: 100`. Right now they fire at the same moment, but I kept them separate so I can refine the logic later—for example, requiring a minimum time on page based on estimated reading time.
+
+It’s a bit redundant today, but it gives me flexibility without breaking existing data.
+
+### Do people skip content?
+
+In dev blogs, it’s common to scan or jump between sections instead of reading everything linearly.
+
+Since I already have a Table of Contents, I track `toc_item_clicked` to see which sections users jump to.
+
+This helps answer things like:
+- which sections are actually interesting
+- which parts get skipped
+- whether the structure of the article makes sense
+
+### What about interactions inside the article?
+
+Beyond reading, I also wanted to understand how users interact with the content itself.
+
+Some examples:
+
+- `outbound_link_clicked`: helps me see if people are following references or external resources
+- `copy_code_clicked`: useful to know if code snippets are actually being used
+- `post_navigation_clicked`: tracks whether users continue reading other posts via next/previous navigation
+
+Individually these are small signals, but together they give a better picture of how people engage with the content beyond just scrolling.
+
+## What this actually tells me about user behavior
+
+In the previous version of the blog, I only tracked page views. That mostly tells you which pages get traffic, but not how people actually interact with them.
+
+With the events from the previous section, I can start moving from isolated signals to a more complete picture. For example, whether people read a post linearly, skip sections, which parts get the most attention, or if they bounce early.
+
+Engagement isn’t a single signal. Scrolling, clicking, and completing a post all represent different behaviors, and combining them gives a much clearer understanding of what’s actually happening.
+
+## Early thoughts
+
+Traffic is still low, so I’m not drawing conclusions yet. But this setup already frames the kinds of questions I care about.
+
+For example, I want to understand whether people read posts linearly or jump straight to implementation-heavy sections. That kind of behavior is common in dev blogs, and this instrumentation should make it visible over time.
+
+## Caveats and Important Notes
+
+- While this setup is useful, my blog traffic is still low, so most of the data is noisy (and heavily influenced by my own usage). Some signals like scroll depth and post completion also overlap, so there’s room to refine how these events are defined over time.
+- Collecting data is one thing, but it’s only valuable if you actually analyze it. Using GA4 explorations or custom dashboards to answer specific questions is what makes this useful. Otherwise, it’s just numbers with no direction. I might dig into this in a future post.
+- Tracking user behavior is powerful, but it comes with privacy considerations. In many regions (like the EU), explicit user consent is required before enabling analytics. This blog does not currently implement a consent flow, which is something I should address if traffic grows or regulations apply. For now, I’m only collecting anonymous, non-personal data, but it’s still important to be mindful of how tracking is implemented.
+
+None of this is perfect, but it’s a good starting point.
+
+## What I’d improve next
+
+This setup is a good starting point, but there are a few things I’d refine over time.
+
+- Make `post_completed` smarter by requiring a minimum time on page instead of relying purely on scroll depth.
+- Turn raw events into actual metrics (like completion rate or engagement rate) to make the data easier to reason about.
+- Improve data quality by filtering out my own traffic more reliably.
+- Add a basic consent flow if the blog grows or starts getting meaningful traffic.
+
+## Closing thoughts
+
+Even with low traffic, this setup helps me think more intentionally about how content is consumed.
+
+I didn’t include full code snippets here to keep the article focused, but the implementation is public if you want to dig deeper:
+<a href="https://github.com/jean182/blog-2026/blob/main/lib/analytics/context.tsx" rel="noopener noreferrer" target="_blank">Tracking Utility</a> and how events are used here:
+<a href="https://github.com/jean182/blog-2026/blob/main/components/CodeBlock.tsx#L32" rel="noopener noreferrer" target="_blank">Event Usage</a>
+
+Nothing fancy, just a small layer on top of GA that gives me better signals.
