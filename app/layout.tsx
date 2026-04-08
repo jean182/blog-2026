@@ -10,6 +10,7 @@ import Analytics from "@/components/Analytics";
 import ScrollTracker from "@/components/ScrollTracker";
 import OutboundTracker from "@/components/OutboundTracker";
 import { FirstInteractionTracker } from "@/lib/analytics";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const viewport: Viewport = {
   themeColor: "#0e0f12",
@@ -59,50 +60,29 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Inline script to prevent flash on load - ALWAYS sets class + background color
-  const themeScript = `
-    (function() {
-      var DARK_BG = '#0e0f12';
-      var LIGHT_BG = '#f7f7f5';
-      try {
-        var stored = localStorage.getItem('theme');
-        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        // Always set a class - either from storage or system preference
-        var theme = stored || (prefersDark ? 'dark' : 'light');
-        document.documentElement.classList.add(theme);
-        document.documentElement.style.backgroundColor = theme === 'light' ? LIGHT_BG : DARK_BG;
-      } catch (e) {
-        document.documentElement.classList.add('dark');
-        document.documentElement.style.backgroundColor = DARK_BG;
-      }
-    })();
-  `;
-
   return (
-    <html lang="en" suppressHydrationWarning style={{ backgroundColor: '#0e0f12' }}>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <Analytics />
-        <FirstInteractionTracker>
-          <ScrollTracker />
-          <OutboundTracker />
-          <div className="min-h-screen">
-            {/* HEADER */}
-            <Header />
-            <HashLinkFix />
+        <ThemeProvider>
+          <Analytics />
+          <FirstInteractionTracker>
+            <ScrollTracker />
+            <OutboundTracker />
+            <div className="min-h-screen flex flex-col">
+              {/* HEADER */}
+              <Header />
+              <HashLinkFix />
 
-            {/* MAIN */}
-            <main className="px-6 mx-auto max-w-170 lg:mx-0 lg:ml-32 xl:ml-48">
-              <ViewTransition>{children}</ViewTransition>
-            </main>
+              {/* MAIN */}
+              <main className="flex-1 px-6 mx-auto max-w-170 lg:mx-0 lg:ml-32 xl:ml-48">
+                <ViewTransition>{children}</ViewTransition>
+              </main>
 
-            {/* FOOTER */}
-            <Footer />
-          </div>
-        </FirstInteractionTracker>
+              {/* FOOTER */}
+              <Footer />
+            </div>
+          </FirstInteractionTracker>
+        </ThemeProvider>
       </body>
     </html>
   );

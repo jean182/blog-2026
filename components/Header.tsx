@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTheme } from "@/lib/useTheme";
+import { useTheme } from "next-themes";
 
 const NAV_ITEMS = [{ href: "/about", label: "about" }];
 
@@ -50,7 +50,11 @@ function MoonIcon({ className }: { className?: string }) {
 }
 
 function ThemeToggle() {
-  const { toggle } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+
+  const toggle = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  };
 
   return (
     <button
