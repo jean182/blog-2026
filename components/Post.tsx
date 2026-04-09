@@ -91,7 +91,7 @@ export default function BlogPost({ post, newerPost, olderPost }: PostProps) {
 
       {/* TABLE OF CONTENTS — fixed in right gutter, desktop only */}
       {headings.length > 0 && (
-        <aside className="hidden xl:block fixed top-24 right-12 w-52">
+        <aside id="toc" className="hidden xl:block fixed top-24 right-12 w-52 focus:outline-none">
           <TableOfContents headings={headings} />
         </aside>
       )}

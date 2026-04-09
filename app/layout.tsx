@@ -9,6 +9,7 @@ import HashLinkFix from "@/components/HashLinkFix";
 import Analytics from "@/components/Analytics";
 import ScrollTracker from "@/components/ScrollTracker";
 import OutboundTracker from "@/components/OutboundTracker";
+import SkipLinks from "@/components/SkipLinks";
 import { FirstInteractionTracker } from "@/lib/analytics";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
@@ -64,6 +65,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider>
+          <SkipLinks />
           <Analytics />
           <FirstInteractionTracker>
             <ScrollTracker />
@@ -74,7 +76,7 @@ export default function RootLayout({
               <HashLinkFix />
 
               {/* MAIN */}
-              <main className="flex-1 px-6 lg:max-w-reading lg:ml-32 xl:ml-48">
+              <main id="main-content" className="flex-1 px-6 lg:max-w-reading lg:ml-32 xl:ml-48 focus:outline-none">
                 <ViewTransition>{children}</ViewTransition>
               </main>
 

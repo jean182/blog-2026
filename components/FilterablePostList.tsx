@@ -49,7 +49,7 @@ export default function FilterablePostList({
 
       {/* CATEGORY FILTER — fixed in right gutter, desktop only */}
       {categories.length > 0 && (
-        <aside className="hidden xl:block fixed top-24 right-12 w-52">
+        <aside id="category-nav" className="hidden xl:block fixed top-24 right-12 w-52 focus:outline-none">
           <nav>
             <p className="mb-4 font-sans text-xs font-semibold uppercase tracking-widest text-(--muted)">
               Categories
