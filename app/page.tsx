@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { getAllPosts } from "@/lib/post";
 import { getPrimaryCategory } from "@/lib/post-utils";
@@ -52,7 +53,9 @@ export default async function HomePage() {
 
       {/* POSTS */}
       {posts.length > 0 ? (
-        <FilterablePostList posts={posts} categories={categories} />
+        <Suspense fallback={null}>
+          <FilterablePostList posts={posts} categories={categories} />
+        </Suspense>
       ) : (
         <p className="text-(--muted)">No posts yet.</p>
       )}
