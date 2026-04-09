@@ -49,24 +49,56 @@ function MoonIcon({ className }: { className?: string }) {
   );
 }
 
-function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme();
+function ContrastIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 2v20" />
+      <path d="M12 2a10 10 0 0 1 0 20" fill="currentColor" />
+    </svg>
+  );
+}
 
-  const toggle = () => {
-    setTheme(resolvedTheme === "dark" ? "light" : "dark");
-  };
+function ThemeSelect() {
+  const { theme, setTheme } = useTheme();
 
   return (
-    <button
-      onClick={toggle}
-      className="relative p-1 w-6 h-6 text-(--muted) hover:opacity-80 transition-opacity cursor-pointer"
-      aria-label="Toggle theme"
-    >
-      {/* Sun - visible in dark mode (CSS-based, no JS wait) */}
-      <SunIcon className="absolute inset-0 m-auto w-4 h-4 transition-all duration-300 dark:rotate-0 dark:scale-100 dark:opacity-100 rotate-90 scale-0 opacity-0" />
-      {/* Moon - visible in light mode */}
-      <MoonIcon className="absolute inset-0 m-auto w-4 h-4 transition-all duration-300 dark:rotate-90 dark:scale-0 dark:opacity-0 rotate-0 scale-100 opacity-100" />
-    </button>
+    <div className="relative flex items-center w-6 h-6">
+      {/* Sun - visible in dark mode only */}
+      <SunIcon 
+        className="absolute inset-0 m-auto w-4 h-4 text-(--muted) pointer-events-none transition-all duration-300 rotate-90 scale-0 opacity-0 dark:rotate-0 dark:scale-100 dark:opacity-100 high-contrast:rotate-90 high-contrast:scale-0 high-contrast:opacity-0"
+      />
+      {/* Moon - visible in light mode (default) */}
+      <MoonIcon 
+        className="absolute inset-0 m-auto w-4 h-4 text-(--muted) pointer-events-none transition-all duration-300 rotate-0 scale-100 opacity-100 dark:-rotate-90 dark:scale-0 dark:opacity-0 high-contrast:-rotate-90 high-contrast:scale-0 high-contrast:opacity-0"
+      />
+      {/* Contrast - visible in high-contrast mode only */}
+      <ContrastIcon 
+        className="absolute inset-0 m-auto w-4 h-4 text-(--muted) pointer-events-none transition-all duration-300 rotate-180 scale-0 opacity-0 high-contrast:rotate-0 high-contrast:scale-100 high-contrast:opacity-100"
+      />
+      
+      {/* Native select - transparent bg but shows focus ring */}
+      <select
+        value={theme}
+        onChange={(e) => setTheme(e.target.value)}
+        aria-label="Select theme"
+        className="absolute inset-0 w-full h-full bg-transparent text-transparent cursor-pointer appearance-none rounded"
+      >
+        <option value="system">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+        <option value="high-contrast">High Contrast</option>
+      </select>
+    </div>
   );
 }
 
@@ -110,7 +142,7 @@ export default function Header() {
             );
           })}
 
-          <ThemeToggle />
+          <ThemeSelect />
         </nav>
       </div>
     </header>

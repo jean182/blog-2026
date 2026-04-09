@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
-/* Tailwind v4: Enable class-based dark mode */
+/* Tailwind v4: Enable class-based dark mode and high-contrast */
 @variant dark (&:where(.dark, .dark *));
+@variant high-contrast (&:where(.high-contrast, .high-contrast *));
 
 /* === VIEW TRANSITIONS === */
 ::view-transition-old(root),
@@ -89,6 +90,21 @@
   /* Logo gradient */
   --logo-from: #f3f4f6;
   --logo-to: #7fa38d;
+}
+
+/* High contrast theme - for users with vision impairments */
+:root.high-contrast {
+  --bg: #000000;
+  --surface: #000000;
+  --text: #ffffff;
+  --heading: #ffffff;
+  --muted: #e0e0e0;
+  --accent: #00ffff;
+  --link: #ffff00;
+
+  /* Logo gradient */
+  --logo-from: #ffffff;
+  --logo-to: #00ffff;
 }
 
 /* === TAILWIND V4 THEME EXTENSIONS === */
@@ -195,4 +211,17 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* === FORCED COLORS (Windows High Contrast Mode) === */
+@media (forced-colors: active) {
+  .skip-link {
+    border: 2px solid;
+  }
+  
+  /* Ensure focus states remain visible */
+  a:focus,
+  button:focus {
+    outline: 2px solid;
+  }
 }
