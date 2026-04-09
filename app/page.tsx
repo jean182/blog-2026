@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getAllPosts } from "@/lib/post";
-import PostList from "@/components/PostList";
+import { getPrimaryCategory } from "@/lib/post-utils";
+import FilterablePostList from "@/components/FilterablePostList";
 
 export const metadata: Metadata = {
   title: "loserkid",
@@ -33,19 +34,25 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const posts = await getAllPosts();
+  
+  // Extract unique categories from all posts
+  const categories = [...new Set(
+    posts.map((post) => getPrimaryCategory(post.frontmatter.tags))
+  )].sort();
+
   return (
     <>
       {/* INTRO */}
       <div className="mb-10 lg:mb-12">
         <p className="max-w-130 text-base leading-relaxed text-(--muted) font-sans lg:text-lg">
           A blog about software, overthinking, and things that probably
-          should've stayed in a draft.
+          should&apos;ve stayed in a draft.
         </p>
       </div>
 
       {/* POSTS */}
       {posts.length > 0 ? (
-        <PostList posts={posts} />
+        <FilterablePostList posts={posts} categories={categories} />
       ) : (
         <p className="text-(--muted)">No posts yet.</p>
       )}

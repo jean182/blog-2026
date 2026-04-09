@@ -15,6 +15,7 @@ export enum AnalyticsEvent {
   // User behavior
   FirstInteraction = "first_interaction",
   TimeToFirstInteraction = "time_to_first_interaction",
+  CategoryFilterSelected = "category_filter_selected",
 
   // Feedback
   ArticleFeedback = "article_feedback",
@@ -80,6 +81,10 @@ export interface TimeToFirstInteractionPayload {
   interaction_type: InteractionType;
 }
 
+export interface CategoryFilterSelectedPayload {
+  category: string; // "all" when showing all posts
+}
+
 export interface ArticleFeedbackPayload {
   value: "positive" | "negative";
 }
@@ -95,6 +100,7 @@ export type EventPayloadMap = {
   [AnalyticsEvent.PostListClicked]: PostListClickedPayload;
   [AnalyticsEvent.FirstInteraction]: FirstInteractionPayload;
   [AnalyticsEvent.TimeToFirstInteraction]: TimeToFirstInteractionPayload;
+  [AnalyticsEvent.CategoryFilterSelected]: CategoryFilterSelectedPayload;
   [AnalyticsEvent.ArticleFeedback]: ArticleFeedbackPayload;
 };
 
