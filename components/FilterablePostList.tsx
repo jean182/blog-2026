@@ -28,6 +28,7 @@ export default function FilterablePostList({
   
   // Track focused index (separate from selected)
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const [isListFocused, setIsListFocused] = useState(false);
 
   const filteredPosts = activeCategory
     ? posts.filter(
@@ -137,11 +138,13 @@ export default function FilterablePostList({
               aria-activedescendant={`category-option-${focusedIndex}`}
               tabIndex={0}
               onKeyDown={handleKeyDown}
+              onFocus={() => setIsListFocused(true)}
+              onBlur={() => setIsListFocused(false)}
               className="space-y-2 border-l border-(--accent)/25 pl-4 focus:outline-none"
             >
               {allOptions.map((option, index) => {
                 const isSelected = option === activeCategory;
-                const isFocused = index === focusedIndex;
+                const isFocused = isListFocused && index === focusedIndex;
                 
                 return (
                   <li
@@ -153,10 +156,10 @@ export default function FilterablePostList({
                     onClick={() => selectCategory(option)}
                     onFocus={() => setFocusedIndex(index)}
                     className={`block w-full text-left font-sans text-sm transition-colors cursor-pointer outline-none ${
-                      isSelected
-                        ? "text-(--accent)"
+                      isSelected || isFocused
+                        ? "text-(--accent) hover:opacity-70"
                         : "text-(--muted) hover:text-(--heading)"
-                    } ${isFocused ? "ring-1 ring-(--accent) ring-offset-1" : ""}`}
+                    } ${isFocused ? "underline underline-offset-4 decoration-(--accent)" : ""}`}
                   >
                     {getOptionLabel(option)}
                   </li>
