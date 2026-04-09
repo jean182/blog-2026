@@ -34,16 +34,19 @@ interface ArticleProviderProps {
   children: ReactNode;
   slug: string;
   title: string;
+  readingTime?: number;
 }
 
 export function ArticleProvider({
   children,
   slug,
   title,
+  readingTime,
 }: ArticleProviderProps) {
   const value: ArticleContext = {
     article_slug: slug,
     article_title: title,
+    reading_time_minutes: readingTime,
   };
 
   return (

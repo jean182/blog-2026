@@ -24,6 +24,7 @@ export enum AnalyticsEvent {
 export interface ArticleContext {
   article_slug: string;
   article_title: string;
+  reading_time_minutes?: number;
 }
 
 // Shared types

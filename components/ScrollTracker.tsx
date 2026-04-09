@@ -43,11 +43,6 @@ export default function ScrollTracker() {
           trackEvent(AnalyticsEvent.ScrollDepthReached, {
             depth_percent: milestone,
           });
-
-          // Track post completion at 100%
-          if (milestone === 100) {
-            trackEvent(AnalyticsEvent.PostCompleted);
-          }
         }
       }
     };

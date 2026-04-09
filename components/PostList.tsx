@@ -16,7 +16,7 @@ export default function PostList({ posts }: { posts: Post[] }) {
 
   return (
     <div className="divide-y divide-(--accent)/25 [&>article]:py-12 [&>article:first-child]:pt-0 [&>article:last-child]:pb-0">
-      {posts.map(({ frontmatter }, index) => (
+      {posts.map(({ frontmatter, readingTime }, index) => (
         <article key={frontmatter.slug}>
           <Link
             href={`/${frontmatter.slug}`}
@@ -33,7 +33,8 @@ export default function PostList({ posts }: { posts: Post[] }) {
           <p className="mt-3 text-sm italic text-(--muted)">
             {formatPostDate(frontmatter.date, "en")}
             <span className="not-italic"> · </span>
-            <span className="font-sans text-sm">
+            <span>{readingTime} min read</span>
+            <span className="ml-3 not-italic px-2 py-0.5 rounded-full bg-(--accent)/10 text-(--accent) text-xs font-sans">
               {getPrimaryCategory(frontmatter.tags)}
             </span>
           </p>

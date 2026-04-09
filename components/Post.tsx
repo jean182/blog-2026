@@ -7,6 +7,7 @@ import MDXComponents from "@/components/MdxComponents";
 import TableOfContents from "@/components/TableOfContents";
 import PostNavLink from "@/components/PostNavLink";
 import ArticleFeedback from "@/components/ArticleFeedback";
+import PostCompletionTracker from "@/components/PostCompletionTracker";
 import { ArticleProvider } from "@/lib/analytics";
 import { extractHeadings, formatPostDate } from "@/lib/post";
 import type { Post as PostType } from "@/types";
@@ -27,7 +28,8 @@ export default function BlogPost({ post, newerPost, olderPost }: PostProps) {
   const headings = frontmatter.toc ? extractHeadings(content) : [];
 
   return (
-    <ArticleProvider slug={slug} title={frontmatter.title}>
+    <ArticleProvider slug={slug} title={frontmatter.title} readingTime={readingTime}>
+      <PostCompletionTracker />
       <article>
         {/* TITLE */}
         <h1 className="text-3xl sm:text-4xl lg:text-4xl font-semibold tracking-tight leading-tight text-(--heading)">
