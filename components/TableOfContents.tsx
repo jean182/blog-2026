@@ -63,7 +63,22 @@ export default function TableOfContents({ headings }: TableOfContentsProps) {
     };
   }, [headings]);
 
-  const handleTocClick = (heading: Heading) => {
+  const handleTocClick = (e: React.MouseEvent, heading: Heading) => {
+    e.preventDefault();
+    
+    const target = document.getElementById(heading.id);
+    if (target) {
+      // Check if heading has an anchor link inside (from rehype-autolink)
+      const anchorInside = target.querySelector<HTMLElement>("a");
+      const focusTarget = anchorInside || target;
+      
+      if (!focusTarget.hasAttribute("tabindex") && !anchorInside) {
+        focusTarget.setAttribute("tabindex", "-1");
+      }
+      focusTarget.focus({ preventScroll: true });
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }   
+    
     setActiveId(heading.id);
     notifyFirstInteraction("click");
     trackEvent(AnalyticsEvent.TocItemClicked, {
@@ -82,7 +97,7 @@ export default function TableOfContents({ headings }: TableOfContentsProps) {
           <li key={heading.id}>
             <a
               href={`#${heading.id}`}
-              onClick={() => handleTocClick(heading)}
+              onClick={(e) => handleTocClick(e, heading)}
               className={[
                 "block font-sans text-sm leading-snug transition-colors duration-150",
                 heading.level === 3 ? "ml-3" : "",

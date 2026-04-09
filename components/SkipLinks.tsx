@@ -46,42 +46,37 @@ export default function SkipLinks() {
     }
   }, []);
 
-  const handleClick = (e: React.MouseEvent, targetId: SkipTarget) => {
-    e.preventDefault();
-    skipTo(targetId);
-  };
-
   return (
     <div className="skip-links">
       {/* Always show: skip to main content */}
-      <a 
-        href="#main-content"
-        onClick={(e) => handleClick(e, "main-content")}
+      <button 
+        onClick={() => skipTo("main-content")}
         className="skip-link"
+        type="button"
       >
         Skip to content
-      </a>
+      </button>
 
       {/* Homepage: skip to category filter (xl screens only) */}
       {isHomePage && isXlScreen && (
-        <a 
-          href="#category-nav"
-          onClick={(e) => handleClick(e, "category-nav")}
+        <button 
+          onClick={() => skipTo("category-nav")}
           className="skip-link"
+          type="button"
         >
           Skip to categories
-        </a>
+        </button>
       )}
 
       {/* Post pages: skip to table of contents (xl screens only) */}
       {isPostPage && isXlScreen && (
-        <a 
-          href="#toc"
-          onClick={(e) => handleClick(e, "toc")}
+        <button 
+          onClick={() => skipTo("toc")}
           className="skip-link"
+          type="button"
         >
           Skip to table of contents
-        </a>
+        </button>
       )}
     </div>
   );
