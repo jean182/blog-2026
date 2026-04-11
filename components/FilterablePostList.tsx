@@ -10,11 +10,15 @@ import PostList from "./PostList";
 interface FilterablePostListProps {
   posts: Post[];
   categories: string[];
+  showDraftsFilter?: boolean;
 }
+
+const DRAFTS_FILTER = "__drafts__";
 
 export default function FilterablePostList({
   posts,
   categories,
+  showDraftsFilter = false,
 }: FilterablePostListProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -23,19 +27,27 @@ export default function FilterablePostList({
   
   const activeCategory = searchParams.get("category");
   
-  // All options: null = "All posts", then categories
-  const allOptions = useMemo(() => [null, ...categories], [categories]);
+  // All options: null = "All posts", then categories, then optionally Drafts
+  const allOptions = useMemo(() => {
+    const opts: (string | null)[] = [null, ...categories];
+    if (showDraftsFilter) {
+      opts.push(DRAFTS_FILTER);
+    }
+    return opts;
+  }, [categories, showDraftsFilter]);
   
   // Track focused index (separate from selected)
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [isListFocused, setIsListFocused] = useState(false);
 
   const filteredPosts = activeCategory
-    ? posts.filter(
-        (post) =>
-          getPrimaryCategory(post.frontmatter.tags).toLowerCase() ===
-          activeCategory.toLowerCase()
-      )
+    ? activeCategory === DRAFTS_FILTER
+      ? posts.filter((post) => post.frontmatter.isDraft)
+      : posts.filter(
+          (post) =>
+            getPrimaryCategory(post.frontmatter.tags).toLowerCase() ===
+            activeCategory.toLowerCase()
+        )
     : posts;
 
   const announce = useCallback((message: string) => {
@@ -61,10 +73,18 @@ export default function FilterablePostList({
     router.push(url, { scroll: false });
     
     // Announce result
-    const count = category 
-      ? posts.filter(p => getPrimaryCategory(p.frontmatter.tags).toLowerCase() === category.toLowerCase()).length
-      : posts.length;
-    const label = category ?? "all categories";
+    let count: number;
+    let label: string;
+    if (category === null) {
+      count = posts.length;
+      label = "all categories";
+    } else if (category === DRAFTS_FILTER) {
+      count = posts.filter(p => p.frontmatter.isDraft).length;
+      label = "drafts";
+    } else {
+      count = posts.filter(p => getPrimaryCategory(p.frontmatter.tags).toLowerCase() === category.toLowerCase()).length;
+      label = category;
+    }
     announce(`${label} selected, showing ${count} ${count === 1 ? "post" : "posts"}`);
     
     notifyFirstInteraction("click");
@@ -109,7 +129,11 @@ export default function FilterablePostList({
     }
   }, [focusedIndex, allOptions, focusOption, selectCategory]);
 
-  const getOptionLabel = (option: string | null) => option ?? "All posts";
+  const getOptionLabel = (option: string | null) => {
+    if (option === null) return "All posts";
+    if (option === DRAFTS_FILTER) return "Drafts";
+    return option;
+  };
 
   return (
     <>

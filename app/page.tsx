@@ -35,6 +35,7 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const posts = await getAllPosts();
+  const isDev = process.env.NODE_ENV === "development";
   
   // Extract unique categories from all posts
   const categories = [...new Set(
@@ -54,7 +55,7 @@ export default async function HomePage() {
       {/* POSTS */}
       {posts.length > 0 ? (
         <Suspense fallback={null}>
-          <FilterablePostList posts={posts} categories={categories} />
+          <FilterablePostList posts={posts} categories={categories} showDraftsFilter={isDev} />
         </Suspense>
       ) : (
         <p className="text-(--muted)">No posts yet.</p>

@@ -21,6 +21,7 @@ export interface PostFrontmatter {
   updated?: string;
   excerpt: string;
   tags: string[];
+  isDraft?: boolean;
   cover?: PostCover;
   canonical?: string;
   ogTitle?: string;

@@ -37,6 +37,13 @@ export async function getAllPosts(): Promise<Post[]> {
         new Date(b.frontmatter.date).getTime() -
         new Date(a.frontmatter.date).getTime()
       );
+    })
+    // Filter out drafts in production
+    .filter((post) => {
+      if (process.env.NODE_ENV === "production") {
+        return !post.frontmatter.isDraft;
+      }
+      return true;
     });
 
   return posts;
