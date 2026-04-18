@@ -27,38 +27,43 @@ schema:
 
 > **Update — 2026-04-04:** This post has been updated to improve clarity and structure. Key changes include refined code blocks, improved accessibility explanations, and updated formatting for modern MDX standards.
 
-I know it has been a while and I haven't posted anything, but I've been busy lately doing a lot of React development using TypeScript, some Prisma, and NestJS fun stuff in the backend. Now let’s get started.
+I know it has been a while since I last posted anything. I've been busy lately, working a lot with React using TypeScript, along with some Prisma and NestJS on the backend. Now, let’s get started.
 
-I'm not a huge fan of `reactstrap` or `react-bootstrap` because I enjoy doing things manually. So, I decided to build the modal core functionality myself—excluding the styles, which will be handled by Bootstrap—while creating something accessible that uses the latest React features like hooks and portals.
+I'm not a huge fan of reactstrap or react-bootstrap because I enjoy building things manually. So, I decided to implement the core modal functionality (almost) by myself—excluding styles, which are provided via Bootstrap—while also making it accessible and using modern React features like hooks and portals.
 
-## Project Setup
+First, let’s create a new React project using TypeScript (not required, but it helps with better typing):
 
-First, let’s create a new React project using TypeScript:
+`yarn create react-app react-bootstrap-modal --template typescript`
 
-```bash
-yarn create react-app react-bootstrap-modal --template typescript
-```
+After that, install the required dependencies:
 
-After that, install the necessary dependencies:
+`yarn add bootstrap@next node-sass`
 
-```bash
-yarn add bootstrap@next node-sass lodash.kebabcase
-yarn add -D @types/lodash.kebabcase
-```
-
-Rename your **index.css** file to **main.scss**, remove its content, and add this line:
+Now, rename the **index.css** file to **main.scss**, remove all its content, and add this line:
 
 ```scss
 @import '~bootstrap/scss/bootstrap.scss';
 ```
 
-## Creating the Modal Components
+Remember to update the **index.tsx** import to match the new file. Then, leave your **App.tsx** like this:
 
-We will create a `components/Modal` folder to house all modal-related logic.
+```tsx
+import React from 'react';
 
-### 1. Modal Overlay (Portal)
+function App() {
+  return (
+    <div className="App">
+      <h1>Bootstrap Modal Example</h1>
+    </div>
+  );
+}
 
-First, we create a React Portal that acts as an overlay shadow when the modal opens:
+export default App;
+```
+
+With that set up, create a `components/Modal` folder where all modal-related logic will live.
+
+First, create a React Portal that will act as the overlay shadow when the modal is open:
 
 ```tsx
 // components/Modal/ModalOverlay/index.tsx
@@ -72,9 +77,7 @@ export default function ModalOverlay() {
 }
 ```
 
-### 2. Shared Types
-
-Let's define the shared types to ensure strict typing across our components.
+Next, create the component responsible for opening the modal: `ModalButton`. This will be a regular button that also receives a reference so we can access the DOM element from the parent modal component. Let’s define the shared types first.
 
 ```ts
 // components/Modal/shared.types.ts
@@ -94,18 +97,30 @@ export type MainChildren = React.ReactNode | CallbackChildren
 export type ModalSize = 'sm' | 'lg' | 'xl'
 ```
 
-### 3. Modal Button
+- **BtnRef** is used to hold a DOM reference and supports multiple typing scenarios for `useRef`.
+- **MainChildren** allows either a ReactNode or a callback function, useful for programmatically closing the modal from children.
+- **ModalSize** matches Bootstrap modal size options.
 
-This component wraps a regular button and handles the reference to the DOM element.
+Now define the props for `ModalButton`:
+
+```ts
+// components/Modal/ModalButton/ModalButton.interfaces.ts
+import React from 'react'
+
+import { BtnRef } from '../shared.types';
+
+export interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  buttonRef: BtnRef
+}
+```
+
+As you can see, the component extends standard button props and adds a custom reference prop. Now create the component:
 
 ```tsx
 // components/Modal/ModalButton/index.tsx
 import React from 'react'
-import { BtnRef } from '../shared.types'
 
-interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  buttonRef: BtnRef
-}
+import {Props} from './ModalButton.interfaces'
 
 export default function ModalButton({
   buttonRef,
@@ -121,16 +136,45 @@ export default function ModalButton({
 }
 ```
 
-## Ensuring Accessibility: Focus Trap Hook
+This simply attaches the ref and spreads the rest of the button props. Pretty nice—this pattern is very useful for building reusable components.
 
-To make the modal accessible, we need to ensure that focus remains inside the modal while it's open.
+Now let’s build the modal content component, which will contain all modal-related UI. First, define the props:
+
+```ts
+// components/Modal/ModalContent/ModalContent.interfaces.ts
+import React from 'react'
+
+import { BtnRef, MainChildren, ModalSize } from '../shared.types'
+
+export interface Props {
+  ariaLabel?: string
+  buttonRef: BtnRef
+  center: boolean
+  footerChildren?: MainChildren
+  open: boolean
+  mainChildren: MainChildren
+  modalRef: React.RefObject<HTMLDivElement>
+  onClickAway: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
+  onClose: () => void
+  onKeyDown: ((event: React.KeyboardEvent<HTMLDivElement>) => void) | undefined
+  size: ModalSize
+  scrollable: boolean
+  title?: string
+}
+```
+
+Some of these props handle closing logic, while others are for styling. `mainChildren` and `footerChildren` can be either a ReactNode or a function returning one. We also use `BtnRef` for the close (X) button.
+
+Now, create a hook to trap focus within the modal when it is open:
 
 ```ts
 // hooks/useFocusTrap.ts
 import React from 'react'
 
 const KEYCODE_TAB = 9
-const FOCUSABLE_ELEMENTS = 'a, button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])'
+
+const FOCUSABLE_ELEMENTS =
+  'a, button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])'
 
 export function useFocusTrap() {
   const ref = React.useRef<HTMLDivElement>(null)
@@ -139,7 +183,7 @@ export function useFocusTrap() {
     const focusableEls = [
       ...ref.current!.querySelectorAll(FOCUSABLE_ELEMENTS),
     ].filter((el) => !el.hasAttribute('disabled')) as HTMLElement[]
-    
+
     const firstFocusableEl = focusableEls[0]
     const lastFocusableEl = focusableEls[focusableEls.length - 1]
 
@@ -161,50 +205,270 @@ export function useFocusTrap() {
   React.useEffect(() => {
     const currentRef = ref.current!
     currentRef.addEventListener('keydown', handleFocus)
-    return () => currentRef.removeEventListener('keydown', handleFocus)
+
+    return () => {
+      currentRef.removeEventListener('keydown', handleFocus)
+    }
   }, [])
 
   return ref
 }
 ```
 
-## Modal Content Component
+Install the kebab-case utility for `aria-labelledby`:
 
-This component handles the rendering of the modal dialog, including animations and ARIA attributes.
+`yarn add lodash.kebabcase`
+
+`yarn add -D @types/lodash.kebabcase`
+
+Now create the `ModalContent` component:
 
 ```tsx
 // components/Modal/ModalContent/index.tsx
 import kebabCase from 'lodash.kebabcase'
 import React from 'react'
-import { useFocusTrap } from '../../../hooks'
-import { MainChildren, ModalSize } from '../shared.types'
 
-// Component logic...
+import { useFocusTrap } from '../../../hooks'
+
+import { MainChildren } from '../shared.types'
+
+import { Props } from './ModalContent.interfaces'
+
+const TIMEOUT_VALUE = 300
+
+export default function ModalContent({
+  ariaLabel,
+  buttonRef,
+  center,
+  footerChildren,
+  mainChildren,
+  modalRef,
+  onClickAway,
+  onClose,
+  onKeyDown,
+  open,
+  size,
+  scrollable,
+  staticBackdrop,
+  title,
+}: Props) {
+  const [staticAnimation, setStaticAnimation] = React.useState(false)
+  const [staticClass, setStaticClass] = React.useState('')
+  const [openClass, setOpenClass] = React.useState('')
+  const dialogRef = useFocusTrap()
+  const scrollClass = scrollable ? ' modal-dialog-scrollable' : ''
+  const verticalCenterClass = center ? ' modal-dialog-centered' : ''
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setOpenClass(open ? ' show' : '')
+    }, TIMEOUT_VALUE);
+    return () => clearTimeout(timer);
+  }, [open]);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setStaticClass(staticAnimation ? ' modal-static' : '')
+    }, TIMEOUT_VALUE);
+    return () => clearTimeout(timer);
+  }, [staticAnimation]);
+
+  const staticOnClick = () => setStaticAnimation(!staticAnimation)
+
+  const render = (content: MainChildren) =>
+    typeof content === 'function' ? content(onClose) : content
+
+  return (
+    <div
+      ref={dialogRef}
+      className={`modal fade${staticClass}${openClass}`}
+      aria-labelledby={kebabCase(ariaLabel)}
+      tabIndex={-1}
+      onClick={staticBackdrop ? staticOnClick : onClickAway}
+      onKeyDown={onKeyDown}
+      style={{
+        display: open ? 'block' : 'none',
+        ...(openClass && {paddingRight: '15px'}),
+        ...(staticAnimation && {overflow: 'hidden'})
+      }}
+      {...(open ? {'aria-modal': true, role: 'dialog'} : {'aria-hidden': true})}
+    >
+      <div
+        className={`modal-dialog modal-${size}${scrollClass}${verticalCenterClass}`}
+        ref={modalRef}
+      >
+        <div className='modal-content'>
+          <div className='modal-header'>
+            {title && <h5>{title}</h5>}
+            <button
+              type='button'
+              className='btn-close'
+              aria-label='close-modal'
+              onClick={onClose}
+              ref={buttonRef}
+            />
+          </div>
+          <div className='modal-body'>{render(mainChildren)}</div>
+          {footerChildren && (
+            <div className='modal-footer'>{render(footerChildren)}</div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
 ```
 
-## The Main Modal Component
+This component always includes a header with a close button (X). The `render` helper supports both function and node children. The effects replicate Bootstrap animations (partially).
 
-Finally, we combine everything into the main `Modal` component. This handles opening/closing states and body scroll locking.
+Now create the main `Modal` component:
 
 ```tsx
 import React from 'react'
-// Modal implementation...
+
+import { Props } from './Modal.interfaces'
+import ModalContent from './ModalContent'
+import ModalOverlay from './ModalOverlay'
+import ModalButton from './ModalButton'
+
+export default function Modal({
+  ariaLabel,
+  btnClassName,
+  btnContent,
+  center = false,
+  children,
+  footerChildren,
+  size = 'lg',
+  scrollable,
+  title,
+}: Props) {
+  const [open, setOpen] = React.useState(false)
+  const btnOpenRef = React.useRef<HTMLButtonElement>(null)
+  const btnCloseRef = React.useRef<HTMLButtonElement>(null)
+  const modalNode = React.useRef<HTMLDivElement>(null)
+  const ESCAPE_KEY = 'Escape'
+
+  React.useEffect(() => {
+    if (open) {
+      btnCloseRef.current!.focus()
+    } else {
+      btnOpenRef.current!.focus()
+    }
+  }, [open])
+
+  function toggleScrollLock() {
+    document.querySelector('body')!.classList.toggle('modal-open')
+  }
+
+  const onOpen = () => {
+    setOpen(true)
+    toggleScrollLock()
+  }
+
+  const onClose = () => {
+    setOpen(false)
+    toggleScrollLock()
+  }
+
+  const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === ESCAPE_KEY) {
+      onClose()
+    }
+  }
+
+  const onClickAway = (event: any) => {
+    if (modalNode.current && !modalNode.current.contains(event.target)) {
+      onClose()
+    }
+  }
+
+  return (
+    <>
+      <ModalContent
+        ariaLabel={ariaLabel}
+        buttonRef={btnCloseRef}
+        center={center}
+        footerChildren={footerChildren}
+        open={open}
+        mainChildren={children}
+        modalRef={modalNode}
+        onClickAway={onClickAway}
+        onClose={onClose}
+        onKeyDown={onKeyDown}
+        size={size}
+        scrollable={scrollable}
+        title={title}
+      />
+      {open && <ModalOverlay />}
+
+      <ModalButton
+        onClick={onOpen}
+        className={btnClassName}
+        buttonRef={btnOpenRef}
+      >
+        {btnContent}
+      </ModalButton>
+    </>
+  )
+}
 ```
 
-## Final Result
+This component manages the modal state, handles events, and controls focus behavior. It also locks body scroll when the modal is open.
 
-You can use the modal component like this:
+Finally, use the modal like this:
 
 ```tsx
-<Modal
-  ariaLabel='Modal Example'
-  btnClassName="btn btn-primary"
-  btnContent='Open Modal'
-  title='Modal Example'
->
-  <p>This is an accessible modal built with React Portals.</p>
-</Modal>
+import React from 'react'
+
+import Modal from './components/Modal'
+
+function App() {
+  return (
+    <div className="container">
+      <h1>Bootstrap Modal Example</h1>
+      <Modal
+        ariaLabel='Modal Example'
+        btnClassName="btn btn-primary"
+        btnContent='Modal regular'
+        footerChildren={(closeModal) => (
+            <button
+              type='button'
+              className='btn btn-primary'
+              onClick={closeModal}
+            >
+              Close it from the child
+            </button>
+        )}
+        title='Modal Example regular'
+      >
+        <p>This is a regular Modal</p>
+      </Modal>
+      <Modal
+        ariaLabel='Modal Example lg'
+        btnClassName="btn btn-secondary"
+        btnContent='Modal lg'
+        size='lg'
+        footerChildren={(closeModal) => (
+            <button
+              type='button'
+              className='btn btn-primary'
+              onClick={closeModal}
+            >
+              Close it from the child
+            </button>
+        )}
+        title='Modal Example lg'
+      >
+        <p>This is a large Modal</p>
+      </Modal>
+    </div>
+  )
+}
 ```
+
+As you can see, you can pass either a `ReactNode` or a `(closeModal: () => void) => ReactNode` for both the footer and main content. This allows children to control modal behavior, which is especially useful for forms.
+
+Hope you enjoyed the post. Converting this to JavaScript should be straightforward—the idea remains the same. This approach ensures proper focus handling within the modal.
 
 ![Modal Example](/posts/accessible-react-bootstrap-modal/react-modal-bootstrap.gif)
 
