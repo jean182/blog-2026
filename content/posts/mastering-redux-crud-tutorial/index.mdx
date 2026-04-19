@@ -25,93 +25,63 @@ schema:
 
 > **Update — April 4, 2026:** This post has been updated to improve clarity and structure. Key changes include refined code explanations, corrected command-line references, and optimized heading hierarchy for better readability.
 
-When you start learning Redux, grasping its core concepts can be confusing—especially if you come from an object-oriented background accustomed to class-based mutation or if you're still getting comfortable with modern ES6 syntax.
+hen you start learning Redux, grasping how it works can be confusing at first. Maybe you come from an object-oriented language and are used to mutating state with classes, or you’ve never worked with ECMAScript 6, so the syntax and patterns you see online feel unfamiliar.
 
-In this guide, we will build a basic CRUD (Create, Read, Update, Delete) application using Redux. To keep things focused on the state management logic, we won't persist data to an external database or API. This approach allows us to master the fundamentals of how data flows through Redux without the added complexity of managing side-effect layers.
+In this post, I’ll walk through a basic Redux CRUD example (create, read, update, delete) without persisting data. The goal is to help you understand how Redux works and why it can be useful in certain scenarios.
 
+First, let’s scaffold a React app using Create React App:
 
-## 1. Project Scaffolding
+`yarn create react-app crud-todo`
 
-We'll begin by scaffolding a new React project using the standard `create-react-app` tool.
+The todo example is one of the most straightforward use cases, but feel free to use anything you like (movies, books, etc.). This example won’t consume an API to keep things simple. Using an API would introduce an additional layer for handling side effects, which we’ll skip for now.
 
-```bash
-yarn create react-app crud-todo
-```
+Let’s add the dependencies we’re going to use:
 
-While we're building a Todo app, the patterns we'll use apply equally well to books, movies, or any other data resource.
+`yarn add redux react-redux redux-logger react-router-dom reselect bootstrap`
 
-### Installing Dependencies
-Next, install the core libraries needed for state management, routing, and styling:
+Next, let’s create our reducer with an initial state and the necessary actions:
 
-```bash
-yarn add redux react-redux redux-logger react-router-dom reselect bootstrap uuid
-```
-
-## 2. Defining the Reducer (The Ducks Pattern)
-
-We'll use the "Ducks" pattern to keep our action types, initial state, and reducer in a single modular file.
-
-```javascript
+```js
 // redux/modules/todos.js
-import { v4 as uuidv4 } from 'uuid';
-
 const NEW_TODO = "crud-todo/todos/NEW_TODO";
 const EDIT_TODO = "crud-todo/todos/EDIT_TODO";
 const DESTROY_TODO = "crud-todo/todos/DESTROY_TODO";
 
 const initialState = {
   todos: [
-    { id: "1", text: "Take the dog for a walk", createdAt: new Date(), updatedAt: new Date() },
-    { id: "2", text: "Finish Homework", createdAt: new Date(), updatedAt: new Date() }
+    {
+      id: "1",
+      text: "Take the dog for a walk",
+    },
+    {
+      id: "2",
+      text: "Finish Homework",
+    }
   ]
 };
 
-export default function reducer(state = initialState, action = {}) {
-  switch (action.type) {
-    case NEW_TODO:
-      const newTodo = { 
-        id: uuidv4(), 
-        text: action.text, 
-        createdAt: new Date(), 
-        updatedAt: new Date() 
-      };
-      return {
-        ...state,
-        todos: [...state.todos, newTodo]
-      };
-    // Other cases will be added as we progress
-    default:
-      return state;
-  }
-}
-
-export function newTodo({ text }) {
-  return { type: NEW_TODO, text };
-}
+export default function reducer(state = initialState, action = {}) { return state }
 ```
 
-## 3. Store Configuration
+Now let’s create the root reducer, the store, and add the Provider in `App.js`:
 
-With our reducer defined, we need to create the root reducer and configure the store.
-
-### Root Reducer
-```javascript
+```js
 // redux/rootReducer.js
 import { combineReducers } from "redux";
 import todosReducer from "./modules/todos";
 
-export default combineReducers({
+const rootReducer = combineReducers({
   todosReducer,
 });
+
+export default rootReducer;
 ```
 
-### Setup Store
-We'll include `redux-logger` in our development environment to help us visualize state changes in the console.
-
-```javascript
+```js
 // redux/setupStore.js
-import { createStore, applyMiddleware } from "redux";
+import { createStore } from "redux";
 import { createLogger } from "redux-logger";
+
 import rootReducer from "./rootReducer";
 
 export default function configureStore(initialState = {}) {
@@ -125,38 +95,81 @@ export default function configureStore(initialState = {}) {
   return createStore(
     rootReducer,
     initialState,
-    applyMiddleware(...middlewares)
   );
 }
 ```
-
-Finally, wrap your application in the Redux `Provider`:
 
 ```jsx
 // App.js
 import React from 'react';
 import { Provider } from "react-redux";
 import setupStore from "./redux/setupStore";
-import AppRouter from "./router/AppRouter";
+import './App.css';
 
 const store = setupStore();
 
 function App() {
   return (
     <Provider store={store}>
-      <AppRouter />
+      <h1>Todos</h1>
     </Provider>
+  );
+}
+
+export default App;
+```
+
+Now that the boilerplate is set up, let’s create a basic router for navigating between pages:
+
+```jsx
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  NavLink
+} from "react-router-dom";
+import TodoList from "../components/TodoList"
+import NewTodo from "../components/NewTodo"
+import EditTodo from "../components/EditTodo"
+
+export default function AppRouter() {
+  return (
+    <Router>
+      <div>
+        <nav className="navbar navbar-expand-lg navbar-light bg-light">
+          <NavLink className="navbar-brand" to="/">Todo List</NavLink>
+          <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span className="navbar-toggler-icon"></span>
+          </button>
+
+          <div className="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul className="navbar-nav mr-auto">
+              <li className="nav-item active">
+                <NavLink className="nav-link" to="/new">New Todo</NavLink>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <Switch>
+          <Route exact path="/">
+            <TodoList />
+          </Route>
+          <Route path="/new">
+            <NewTodo />
+          </Route>
+          <Route path="/edit/:id">
+            <EditTodo />
+          </Route>
+        </Switch>
+      </div>
+    </Router>
   );
 }
 ```
 
-## 4. Implementing Routing and UI
-
-We'll use `react-router-dom` to manage navigation between our list, create, and edit views.
-
-
-### The Todo List Component
-This component connects to the Redux store to retrieve and display our todos.
+This is mostly based on the React Router example. Next, let’s create the todo list component:
 
 ```jsx
 // components/TodoList.js
@@ -166,27 +179,32 @@ import { Link } from 'react-router-dom';
 
 function TodoList({ todos }) {
   return (
-    <div className="container mt-4">
+    <div className="container">
       <h1>Todo List</h1>
-      <table className="table table-hover">
+      <table className="table">
         <thead className="thead-dark">
           <tr>
-            <th>Text</th>
-            <th>Created At</th>
-            <th>Actions</th>
+            <th scope="col">Text</th>
+            <th scope="col">Created At</th>
+            <th scope="col">Updated At</th>
+            <th scope="col">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {todos.map(({ id, text, createdAt }) => (
+        {todos.length > 0 && todos.map(({ id, text, createdAt, updatedAt }) => {
+          return (
             <tr key={id}>
-              <td>{text}</td>
+              <th scope="row">{text}</th>
               <td>{createdAt.toISOString()}</td>
+              <td>{updatedAt.toISOString()}</td>
               <td>
-                <Link className="btn btn-sm btn-info mr-2" to={`edit/${id}`}>Edit</Link>
-                <button className="btn btn-sm btn-danger">Delete</button>
+                <Link className="btn btn-link" to={`edit/${id}`}>Edit</Link>
+                /
+                <button className="btn btn-link" onClick={() => {}}>Delete</button>
               </td>
             </tr>
-          ))}
+          )
+        })}
         </tbody>
       </table>
     </div>
@@ -200,27 +218,166 @@ const mapStateToProps = state => ({
 export default connect(mapStateToProps)(TodoList);
 ```
 
-## 5. Handling State Transitions (CRUD)
+This component connects to Redux, retrieves todos, and renders them. It also includes a link to edit each todo.
 
-### Create: Non-Mutable Updates
-In Redux, you must **never** mutate the state directly. Instead, you should always return a new object representing the updated state.
+Next, let’s create a reusable form component:
 
-> **Important Note:** Avoid methods like `Array.prototype.push` which modify the existing array. Instead, use the ES6 spread operator (`...`) to create copies.
+```jsx
+// components/TodoForm.js
+import React, { useState } from 'react';
 
-```javascript
-// Correct way to add an item
-return {
-  ...state,
-  todos: [...state.todos, newTodo]
+function TodoForm(props) {
+  const { todo, action } = props;
+  const [text, setText] = useState(todo.text ? todo.text : "");
+
+  const onSubmit = (event) => {
+    event.preventDefault();
+    action(todo.id ? { id: todo.id, text } : { text })
+  }
+
+  return (
+    <form onSubmit={onSubmit}>
+      <div className="form-group">
+        <input className="form-control"
+          type="text"
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+        />
+      </div>
+      <input
+        type="submit"
+        className="btn btn-success"
+      />
+    </form>
+  );
+}
+
+export default TodoForm;
+```
+
+This component handles both creating and editing todos.
+
+Now let’s create the new todo component:
+
+```jsx
+import React from 'react';
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import TodoForm from './TodoForm';
+import { newTodo } from '../redux/modules/todos';
+
+function NewTodo({ newAction }) {
+  return (
+    <div className="container">
+      <h1>New Todo</h1>
+      <TodoForm action={newAction} todo={{}} />
+    </div>
+  );
+}
+
+const mapDispatchToProps = dispatch => {
+  return bindActionCreators(
+    {
+      newAction: newTodo,
+    },
+    dispatch,
+  );
+};
+
+export default connect(null, mapDispatchToProps)(NewTodo);
+```
+
+Now update the reducer to handle creating todos:
+
+```js
+import { v4 as uuidv4 } from 'uuid';
+
+export default function reducer(state = initialState, action = {}) {
+  switch (action.type) {
+    case NEW_TODO:
+      const newTodo = { id: uuidv4(), text: action.text, createdAt: new Date(), updatedAt: new Date() }
+      return {
+        ...state,
+        todos: [...state.todos, newTodo]
+      }
+    default:
+      return state
+  }
+}
+
+export function newTodo({ text }) {
+  return { type: NEW_TODO, text };
 }
 ```
 
-### Update: Using Selectors
-When editing a todo, we need to find the specific item by its ID. We use **Reselect** to create memoized selectors for efficient data retrieval.
+The key idea here is immutability. We don’t mutate the existing state—instead, we return a new copy.
 
-```javascript
-// redux/modules/todos.js
+Next, the edit component:
+
+```jsx
+// components/EditTodo.js
+import React from 'react';
+import TodoForm from './TodoForm';
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import { withRouter } from 'react-router-dom';
+import { getTodoById, editTodo } from '../redux/modules/todos';
+
+function EditTodo({ todo, editAction }) {
+  return (
+    <div className="container">
+      <h1>Edit Todo</h1>
+      <TodoForm action={editAction} todo={todo} />
+    </div>
+  );
+}
+
+function mapStateToProps(state, ownProps) {
+  const { params } = ownProps.match;
+  const { id } = params;
+
+  return { todo: getTodoById(state, id) }
+}
+
+const mapDispatchToProps = dispatch => {
+  return bindActionCreators(
+    {
+      editAction: editTodo,
+    },
+    dispatch,
+  );
+};
+
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(EditTodo));
+```
+
+Reducer updates:
+
+```js
 import { createSelector } from "reselect";
+
+export default function reducer(state = initialState, action = {}) {
+  switch (action.type) {
+    case EDIT_TODO:
+      const { editedTodo } = action;
+      const editedTodos = state.todos.map((todo) => {
+        if (todo.id === editedTodo.id) {
+          return { ...todo, text: editedTodo.text, updatedAt: new Date() }
+        }
+        return { ...todo }
+      })
+      return {
+        ...state,
+        todos: editedTodos
+      }
+    default:
+      return state
+  }
+}
+
+export function editTodo(editedTodo) {
+  return { type: EDIT_TODO, editedTodo };
+}
 
 const getTodo = (state, id) =>
   state.todosReducer.todos.find(todo => id === todo.id);
@@ -231,17 +388,16 @@ export const getTodoById = createSelector(
 );
 ```
 
-### Delete: Filtering the State
-Deleting an item is achieved by filtering the current array to exclude the target ID. Since `filter` returns a new array, it maintains the immutability requirements of Redux.
+Finally, delete functionality:
 
-```javascript
+```js
 case DESTROY_TODO:
+  const { id } = action;
+  const newTodos = state.todos.filter(todo => todo.id !== id);
   return {
     ...state,
-    todos: state.todos.filter(todo => todo.id !== action.id)
-  };
+    todos: newTodos
+  }
 ```
 
-## Summary
-
-As you can see, Redux is fundamentally about managing data structures and returning new values whenever an action is dispatched. While this example uses local data, the methodology remains the same when connecting to an API; you would simply add a middleware layer (like Redux-Saga or Thunk) to handle the asynchronous side effects.
+Redux is fundamentally about transforming state in a predictable, immutable way. Once you understand that, everything else becomes much simpler.
