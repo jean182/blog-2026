@@ -41,6 +41,19 @@ export default function BlogPost({ post, newerPost, olderPost }: PostProps) {
           {formatPostDate(frontmatter.date, "en")}{" "}
           <span className="text-(--accent)">·</span> {readingTime} min read
         </p>
+
+        {/* TABLE OF CONTENTS — inline on mobile/tablet */}
+        {headings.length > 0 && (
+          <details className="xl:hidden mt-6 mb-8 border border-(--accent)/25 rounded-lg">
+            <summary className="px-4 py-3 cursor-pointer font-sans text-sm font-medium text-(--heading) select-none">
+              Table of contents
+            </summary>
+            <div className="px-4 pb-4">
+              <TableOfContents headings={headings} />
+            </div>
+          </details>
+        )}
+
         <div className="max-w-none">
           <MDXRemote
             source={content}

@@ -145,6 +145,34 @@ export default function FilterablePostList({
         aria-atomic="true" 
         className="sr-only"
       />
+
+      {/* CATEGORY FILTER — inline collapsible on mobile/tablet */}
+      {categories.length > 0 && (
+        <details className="xl:hidden mb-8 border border-(--accent)/25 rounded-lg">
+          <summary className="px-4 py-3 cursor-pointer font-sans text-sm font-medium text-(--heading) select-none">
+            Filter by category
+          </summary>
+          <div className="px-4 pb-4 flex flex-wrap gap-2">
+            {allOptions.map((option) => {
+              const isSelected = option === activeCategory;
+              return (
+                <button
+                  key={option ?? "all"}
+                  type="button"
+                  onClick={() => selectCategory(option)}
+                  className={`px-3 py-1.5 rounded-full font-sans text-sm transition-colors ${
+                    isSelected
+                      ? "bg-(--accent) text-(--bg)"
+                      : "bg-(--surface) text-(--muted) hover:text-(--heading)"
+                  }`}
+                >
+                  {getOptionLabel(option)}
+                </button>
+              );
+            })}
+          </div>
+        </details>
+      )}
       
       <PostList posts={filteredPosts} />
 

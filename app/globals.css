@@ -196,3 +196,23 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* === DETAILS/SUMMARY (collapsible) === */
+details summary {
+  list-style: none;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 0.5rem;
+  transition: transform 0.15s ease;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
