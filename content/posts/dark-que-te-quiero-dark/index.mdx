@@ -2,7 +2,7 @@
 title: "Implementing Dark Mode: From CSS Classes to Theme UI and CSS Variables"
 slug: "dark-que-te-quiero-dark"
 date: "2020-01-20T11:22:25.427Z"
-updated: "2026-04-04"
+updated: "2026-04-19"
 excerpt: "Explore three distinct strategies for implementing dark mode: classic CSS class toggles, Theme UI hooks, and modern CSS variables with system preference detection."
 cover:
   src: "/posts/dark-que-te-quiero-dark/cover.png"
@@ -26,68 +26,72 @@ schema:
   author: "Jean Aguilar"
 ---
 
+> **Update — April 19, 2026:** Added a new section covering the current implementation using Next.js, Tailwind CSS v4, and next-themes.
+>
 > **Update — April 4, 2026:** This post has been updated to improve clarity and structure. Key changes include refined technical explanations of the CSS variable approach, improved code formatting, and a structured comparison of browser compatibility for different strategies.
 
-When I was first building this blog, the very first feature I wanted was a theme switcher. I’ve been fascinated by dark modes since the days of installing custom ROMs on my Galaxy S3 Mini with Android 4.1. Back then, a dark system UI was a novelty provided by the community; it’s only recently that we've seen it become a native standard across Android, iOS, and macOS.
+When I first created this blog, one of the main features I wanted was the ability to switch between a light and a dark theme. I remember that light and dark themes had already been around for a while—even back when I was installing custom ROMs on my Galaxy S3 Mini running Android 4.1. Some ROMs already supported switching to a dark system UI, which felt pretty awesome at the time. It’s interesting because only in recent years have we started seeing this feature widely adopted in stock Android, iOS, and macOS.
 
-In this post, we'll explore how different websites implement their themes—ranging from manual toggles to systems that automatically sync with your OS preferences.
+In this post, I'll walk through how different websites implement theming. Most of them allow you to switch using a toggle or button, some persist the choice even after closing the browser, and others automatically select a theme based on your OS preferences. If you're mainly curious about how this blog currently handles dark mode, you can skip ahead to [Loserkid V2](#loserkid-v2).
 
+## Google Fonts.
 
-## 1. The Google Fonts Approach: Class-Based Toggling
+First, let’s look at the simplest and most straightforward approach. I’ll use Google Fonts as an example.
 
-The most straightforward method is the one used by [Google Fonts](https://fonts.google.com/). It relies on a high-level CSS class to switch the entire UI context.
+If you inspect the site, you’ll notice that they add a class to the `html` element called `t-white`. When you switch to dark mode using the background color selector, that class changes to `t-black`. The JavaScript likely toggles the class on the root element, and that alone updates the entire UI.
 
-If you inspect the Google Fonts site, you'll see a class in the `<html>` tag called `t-white`. When you select the dark background option, JavaScript changes that class to `t-black`. 
-
-### CSS Implementation
-The CSS simply defines the same elements under different parent classes:
+If we inspect the CSS (you may need to beautify it), we can see that they define styles for both `t-black` and `t-white`, essentially duplicating styles with the appropriate color changes:
 
 ```css
-/* Dark Theme Implementation */
+/* Some of the black classes */
 .t-black,
 .t-black body,
 .t-black #main {
 	background: #222;
 	color: #fff;
-	fill: #fff;
+	fill: #fff
 }
 
+.t-black .fonts-page.is-bordered,
 .t-black .fonts-module {
-	border-top-color: rgba(255, 255, 255, .4);
+	border-top-color: rgba(255, 255, 255, .4)
 }
 
-/* Light Theme Implementation */
+/* Some of the white classes */
+.t-white .fonts-page.is-bordered,
+.t-white .fonts-module {
+	border-top-color: rgba(0, 0, 0, .4)
+}
+
 .t-white,
 .t-white body,
-.t-white #main {
+.t-white #main,
+.t-white .font-preview-headers,
+.t-white .font-preview-controls {
 	background: #fff;
-	color: #333;
-	fill: #000;
-}
-
-.t-white .fonts-module {
-	border-top-color: rgba(0, 0, 0, .4);
+	fill: #fff
 }
 ```
 
-**The Verdict:**
-* **Pros:** Best-in-class cross-browser compatibility. It works even on legacy browsers like IE11 because it uses plain CSS selectors.
-* **Cons:** It can lead to code duplication as you effectively write your styles twice. In its basic form, it often doesn't persist after a refresh unless you add `localStorage` logic.
+What I like about this approach is that it works across all major browsers. It relies on plain CSS, which makes it very reliable, even if it involves some duplication. That tradeoff ensures strong cross-browser compatibility—something other methods don’t always guarantee.
 
-## 2. The Gatsby & Theme UI Approach: Hook-Based Management
+One downside is that the page does not persist your selection. Every time you refresh, it defaults back to the light theme (although this could be added).
 
-Gatsby uses a library called [Theme UI](https://theme-ui.com/) to manage its styles. This approach moves the configuration into a "Theme Object" that defines colors, typography, and layout values.
+## Gatsby approach.
 
-Theme UI provides a custom hook called `useColorMode` that allows you to easily switch or retrieve the current theme state.
+Gatsby is a library for building static websites (this blog used to use it!), and their site is a great example. If you explore their repository, you’ll see they use a library called `theme-ui` to manage styling, including light and dark themes.
 
-### Example Implementation
+The idea is simple: you define a theme object that includes colors, typography, and layout values. This theme supports color modes, allowing you to define different values depending on the active theme.
+
+Then, you use the `useColorMode` hook to read or update the current theme. Gatsby uses this in their `DarkModeToggle` component.
+
+Here’s an example from their docs:
+
 ```jsx
 import React from 'react'
 import { useColorMode } from 'theme-ui'
-
 export default props => {
   const [colorMode, setColorMode] = useColorMode()
-  
   return (
     <header>
       <button
@@ -101,26 +105,27 @@ export default props => {
 }
 ```
 
-**The Verdict:**
-* **Pros:** Theme UI handles the "dirty work" for you, including persisting the selection in `localStorage` and respecting system preferences.
-* **Cons:** It is primarily compatible with React and requires you to be comfortable with styling within JSX (CSS-in-JS).
+This hook behaves similarly to `useState`, but it handles persistence and theme switching for you.
 
-## 3. The DIY Approach: CSS Variables and System Preferences
+This approach is very easy to set up and handles most of the complexity automatically, including storing the selected theme in `localStorage`. It also supports `prefers-color-scheme`, which we’ll cover later.
 
-For this blog, I used a custom implementation inspired by [overreacted.io](https://overreacted.io/). This method leverages **CSS Variables** (Custom Properties) and the `prefers-color-scheme` media query.
+~~One drawback used to be browser compatibility, as IE11 doesn’t support `prefers-color-scheme` or CSS variables.~~
 
-### Using CSS Variables
-Variables allow us to define values that update dynamically based on the current theme class:
+**Update: It is possible to use `theme-ui` without CSS variables, and `prefers-color-scheme` can be disabled.**
+
+## Loserkid V1
+
+Now let’s talk about my blog. I implemented the theme using tutorials that focused on CSS variables, and I used <a href="https://overreacted.io/" target="_blank" rel="noopener noreferrer">overreacted.io</a> as inspiration for persisting the theme.
+
+CSS variables allow you to define reusable values that change depending on context. For example:
 
 ```css
 html.light {
   --btnColor: #e66992;
-  --bgColor: #ffffff;
 }
 
 html.dark {
   --btnColor: #ffa7c4;
-  --bgColor: #1a1a1a;
 }
 
 button {
@@ -128,33 +133,188 @@ button {
 }
 ```
 
+When the `html` class changes, the button color updates automatically.
 
-### Detecting System Preferences
-The `prefers-color-scheme` property allows the site to match the user's OS theme automatically. You can detect this in JavaScript using `window.matchMedia`:
+One thing you’ll notice if you visit my blog is that the default theme matches your OS theme. This is done using the `prefers-color-scheme` media feature. According to MDN, it detects whether the user prefers a light or dark theme.
 
-```javascript
-const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+For example:
 
-if (darkQuery.matches) {
-  console.log("User prefers a dark theme");
+```js
+var darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+```
+
+This returns an object like:
+
+```js
+{
+  media: "(prefers-color-scheme: dark)",
+  matches: true,
+  onchange: null
 }
 ```
 
+The `matches` property tells you whether the query matches the system preference.
 
-### Preventing the "Flash of Unstyled Content" (FOUC)
-A common bug in theme implementations is the site loading the default light theme for a split second before switching to the saved dark theme. 
+If you want to override this and allow users to choose a theme, you’ll need to use `localStorage`:
 
-To fix this, you must run a blocking script **before** your main application (React) loads. This script should:
-1. Check `localStorage` for a saved preference.
-2. Check `prefers-color-scheme` as a fallback.
-3. Immediately apply the correct class to the `<html>` or `<body>` tag.
+```js
+localStorage.setItem('theme', "dark");
+localStorage.getItem('theme');
+```
+
+Your implementation should include logic to read and write this value. Ideally, this runs before your SPA loads to avoid flickering between themes.
+
+I used an approach inspired by overreacted.io, which solved an issue I had where the page would briefly load in light mode before switching to dark.
+
+## Loserkid V2
+
+Fast-forward to 2026, and the blog has been completely rebuilt using Next.js and Tailwind CSS v4. The theming approach has evolved significantly, combining the best of both worlds: CSS variables for design tokens and a battle-tested library for theme management.
+
+### The Stack
+
+- **Next.js** with App Router for the framework
+- **Tailwind CSS v4** for styling
+- **next-themes** for theme state management and persistence
+
+### CSS Variables + Tailwind v4
+
+Tailwind v4 introduced native support for CSS variables as design tokens. I define all my color tokens in `globals.css`:
+
+```css
+:root {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --text: #1c1c1c;
+  --heading: #111111;
+  --muted: #6b6f76;
+  --accent: #2f5d8a;
+  --link: #1d4ed8;
+}
+
+:root.dark {
+  --bg: #0e0f12;
+  --surface: #14161c;
+  --text: #e8e8ea;
+  --heading: #ffffff;
+  --muted: #9aa0a6;
+  --accent: #7fa38d;
+  --link: #3b82f6;
+}
+```
+
+The key insight is that the `.dark` class is applied to the root `<html>` element. When that class is present, all the CSS variables automatically switch to their dark values. No JavaScript needed for the actual color changes—just CSS.
+
+Tailwind v4 uses a new `@variant` directive to enable class-based dark mode:
+
+```css
+@variant dark (&:where(.dark, .dark *));
+```
+
+This lets you use Tailwind's `dark:` prefix in your components, and it will match when the `.dark` class is present on any ancestor.
+
+### Theme Management with next-themes
+
+The `next-themes` library handles all the tricky parts:
+
+- Reading/writing to `localStorage`
+- Detecting system preference via `prefers-color-scheme`
+- Preventing flash of incorrect theme on page load
+- Providing a React hook for theme state
+
+The setup is minimal:
+
+```tsx
+import { ThemeProvider } from "next-themes";
+
+export function ThemeProvider({ children }) {
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+    >
+      {children}
+    </ThemeProvider>
+  );
+}
+```
+
+Setting `attribute="class"` tells next-themes to add the theme name as a class to the `<html>` element—exactly what our CSS variables expect.
+
+### The Toggle Button
+
+The toggle uses the `useTheme` hook from next-themes:
+
+```tsx
+import { useTheme } from "next-themes";
+
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+
+  const toggle = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  };
+
+  return (
+    <button onClick={toggle} aria-label="Toggle theme">
+      {/* Icons here */}
+    </button>
+  );
+}
+```
+
+The `resolvedTheme` value tells you the *actual* theme being displayed (important when the user has selected "system" and you need to know if that resolved to light or dark).
+
+One trick I use is CSS-based icon transitions instead of conditional rendering. Both sun and moon icons are always in the DOM, but CSS handles showing/hiding them based on the `.dark` class:
+
+```tsx
+{/* Sun - visible in dark mode */}
+<SunIcon className="dark:opacity-100 dark:scale-100 opacity-0 scale-0" />
+{/* Moon - visible in light mode */}
+<MoonIcon className="dark:opacity-0 dark:scale-0 opacity-100 scale-100" />
+```
+
+This avoids hydration mismatches that can occur when you conditionally render based on `resolvedTheme`, since that value isn't available during server-side rendering.
+
+### Smooth Transitions
+
+For the theme switch animation, I add CSS transitions to the base styles:
+
+```css
+html {
+  transition: background-color 0.3s ease;
+}
+
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+```
+
+And for the logo gradient (which uses CSS variables for its colors), I use `@property` to make those variables animatable:
+
+```css
+@property --logo-from {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f3f4f6;
+}
+```
+
+### What I Like About This Approach
+
+1. **No flash**: next-themes injects a script that runs before React hydrates, ensuring the correct theme class is applied immediately.
+2. **System preference respected**: Users who prefer dark mode get it automatically, but can override if they want.
+3. **CSS does the heavy lifting**: The actual styling is pure CSS variables—no JavaScript needed to compute colors.
+4. **Tailwind integration**: The `dark:` variant works seamlessly with the class-based approach.
+5. **Minimal code**: The entire theme setup is about 15 lines of configuration.
+
+Compared to my original implementation, this is far cleaner. No custom scripts in `_document`, no manual `matchMedia` listeners, no fighting with SSR. The ecosystem has matured.
 
 ## Conclusions
 
-Which approach should you choose?
-
-1. **Google Fonts Style:** Use this if you need deep enterprise support (IE11) or want to avoid CSS variables. It's robust but manual.
-2. **Theme UI:** Best for React developers who want a comprehensive tool that handles state, persistence, and theming out of the box.
-3. **DIY (CSS Variables):** Great for modern browsers. It provides the cleanest code structure and allows for fine-grained control over system-level synchronization.
-
-If I were to start over, I’d likely choose **Theme UI**. Even though I generally prefer external stylesheets, the ease of setup and built-in persistence makes the development experience much smoother.
+* The Google Fonts approach is great for cross-browser compatibility and works even in older environments like IE11.
+* Theme UI is a powerful and convenient tool that simplifies setup and handles persistence for you.
+* The original "Loserkid V1" approach with custom CSS variables and localStorage worked, but required manual handling of SSR edge cases.
+* The current "Loserkid V2" approach combines CSS variables with next-themes, getting the best of both worlds: semantic design tokens and battle-tested theme management.
+* Ultimately, all approaches rely on changing a class or attribute on a DOM node—the main difference is how that change is managed.
+* In 2026, I'd recommend the Next.js + next-themes + Tailwind CSS v4 combination. The ecosystem has matured to the point where dark mode is essentially a solved problem.
