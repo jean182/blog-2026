@@ -1,0 +1,554 @@
+---
+title: "Solving React Re-Renders with a Subscription-Based Provider"
+slug: "react-reference-stability"
+isDraft: false
+date: "2026-05-17T00:00:00.000Z"
+excerpt: "Why your React Context re-renders everything, and how to fix it with object identity caching, field-level subscriptions, and stable hook dependencies."
+cover:
+  src: ""
+  alt: ""
+tags: ["React", "Performance", "TypeScript"]
+canonical: "https://loserkid.io/react-reference-stability"
+ogTitle: "A Practical Guide to Reference Stability in React"
+ogDescription: "Understanding how object identity, subscriptions, and dependency stability prevent unnecessary re-renders in React applications."
+summaryBullets:
+  - "Why useContext re-renders all consumers on any state change"
+  - "Object identity caching to preserve referential equality"
+  - "Field-level subscriptions so components only react to their data"
+  - "Stabilizing hook dependency arrays with deep-equal memoization"
+toc: true
+schema:
+  organization: "Personal Blog"
+  author: ""
+---
+
+When you're working on a large React app, React Context usually becomes the default way to share state around the tree. It works well at first, but eventually you start noticing something annoying: changing one small thing causes a ridiculous amount of re-renders.
+
+At small scale this usually doesn't matter much. In bigger apps though — feature flags, policies, runtime settings, orchestration state, experiments — it starts becoming expensive fast.
+
+The problem is that `useContext` doesn't care what actually changed. It only cares whether the provider value has a different reference.
+
+This article walks through a few patterns I kept noticing while digging through shared settings and subscription-heavy code paths in larger React applications:
+- moving state outside React
+- subscription-based updates
+- category and field-level filtering
+- stabilizing dependency arrays to avoid subscription churn
+
+Not because React Context is bad, but because once apps get large enough, render propagation itself becomes something you have to think about architecturally.
+
+The full demo used in this article is available on GitHub:
+
+- [react-reference-stability](https://github.com/jean182/react-reference-stability)
+
+The project intentionally stays small so the render propagation behavior is easier to observe without a bunch of unrelated app complexity.
+
+Here's the initial version (all consumers re-render on any change) and the final version (only affected consumers re-render):
+
+<CodeSandbox id="22mcrr" view="preview" title="Initial Provider example" />
+
+<CodeSandbox id="rq8226" view="preview" title="Final working example" />
+
+## The Setup
+
+In this example we have a Provider where settings are stored — think user preferences, feature flags, fixed configuration values. Consumers call a custom hook to read and update these settings. This is a very common pattern in React apps.
+
+```tsx
+import { createContext, useState, type ReactNode } from "react";
+import { DEFAULT_SETTINGS, type AppSettings } from "./types";
+
+export type SettingsContextValue = {
+  settings: AppSettings;
+  updateSettings: (patch: Partial<AppSettings>) => void;
+};
+
+export const SettingsContext = createContext<SettingsContextValue | null>(null);
+
+export function SettingsProvider({ children }: { children: ReactNode }) {
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+
+  const updateSettings = (patch: Partial<AppSettings>) => {
+    setSettings(prev => ({ ...prev, ...patch }));
+  };
+
+  return (
+    <SettingsContext.Provider value={{ settings, updateSettings }}>
+      {children}
+    </SettingsContext.Provider>
+  );
+}
+```
+
+The hook itself is just a wrapper around `useContext`:
+
+```tsx
+import { useContext } from "react";
+import { SettingsContext } from "./SettingsProvider";
+
+export function useSettings() {
+  const ctx = useContext(SettingsContext);
+
+  if (!ctx) {
+    throw new Error("useSettings must be used within SettingsProvider");
+  }
+
+  return ctx;
+}
+```
+
+## The Problem
+
+Imagine the app renders 20 different components, each consuming a single field from the settings object.
+
+Now imagine updating something tiny like `darkMode`.
+
+The provider spreads a new state object, React sees a new context value reference, and every consumer re-renders — even components reading completely unrelated fields.
+
+This is just how `useContext` works. It compares by reference, not by content.
+
+```ts
+{} === {} // false
+```
+
+So even if 16 components don't actually care about the field that changed, React still wakes them all up because the provider value itself changed identity.
+
+At small scale this usually isn't catastrophic. In larger apps though, those renders start becoming expensive:
+- derived computations
+- expensive trees
+- orchestration logic
+- feature-flagged rendering paths
+- effects retriggering
+- telemetry hooks
+- subscriptions reattaching
+
+Eventually render propagation itself becomes something you have to manage intentionally.
+
+## Why Not Just Memo?
+
+A lot of React apps solve this through memoization, context splitting, or selector-based libraries like Zustand.
+
+Those approaches definitely help, but the interesting part to me was understanding the propagation problem underneath all of them.
+
+The problem is that `useContext` itself triggers the re-render before memoization even matters. If the provider value changes reference, every consumer wakes up.
+
+`useMemo` on the provider value also doesn't save you once the underlying state actually changes. You're still creating a new object, which means React still sees a different context value.
+
+## Breaking Out of React's Render Cycle
+
+One pattern I kept noticing in larger codebases was shared state living outside React entirely, with components subscribing into it instead of relying purely on render propagation.
+
+Instead of React deciding which consumers re-render, what if components subscribed directly to the specific data they care about?
+
+### Subscriptions and Observables
+
+A subscription is basically:
+> "tell me when this changes and I'll decide what to do with it."
+
+Instead of React aggressively pushing renders down the tree, components can react to updates on their own terms.
+
+RxJS gives us a nice primitive for this with `BehaviorSubject`.
+
+A `BehaviorSubject`:
+- stores a current value
+- emits updates to subscribers
+- immediately gives new subscribers the latest value
+
+Here's a tiny example outside React entirely:
+
+```ts
+import { BehaviorSubject } from "rxjs";
+
+const temperature$ = new BehaviorSubject(20);
+
+// Subscriber A joins
+const subA = temperature$.subscribe(val => {
+  console.log(`A: ${val}°C`);
+});
+
+// logs immediately:
+// A: 20°C
+
+temperature$.next(25);
+
+// logs:
+// A: 25°C
+
+// Subscriber B joins later
+const subB = temperature$.subscribe(val => {
+  console.log(`B: ${val}°C`);
+});
+
+// logs immediately:
+// B: 25°C
+
+temperature$.next(30);
+
+// logs:
+// A: 30°C
+// B: 30°C
+
+subA.unsubscribe();
+
+temperature$.next(35);
+
+// logs:
+// B: 35°C
+```
+
+This ends up fitting React pretty naturally:
+- subscribe on mount
+- unsubscribe on cleanup
+
+Which makes `useEffect` a decent bridge between React and the observable world.
+
+### Holding State in a Plain Class
+
+One pattern I kept seeing was state being treated more like infrastructure than component state.
+
+Instead of `useState` inside a Provider, the idea here is treating settings as a long-lived runtime object that emits updates through a `BehaviorSubject`.
+
+```ts
+import { BehaviorSubject } from "rxjs";
+import type { AppSettings } from "./types";
+import { DEFAULT_SETTINGS } from "./types";
+
+export class SettingsService {
+  private settings: AppSettings = { ...DEFAULT_SETTINGS };
+
+  private subject = new BehaviorSubject<AppSettings>(this.settings);
+
+  get<K extends keyof AppSettings>(field: K): AppSettings[K] {
+    return this.settings[field];
+  }
+
+  getAll(): AppSettings {
+    return this.settings;
+  }
+
+  set(patch: Partial<AppSettings>): void {
+    this.settings = {
+      ...this.settings,
+      ...patch,
+    };
+
+    this.subject.next(this.settings);
+  }
+
+  subscribe(callback: (settings: AppSettings) => void) {
+    return this.subject.subscribe(callback);
+  }
+}
+
+export const settingsService = new SettingsService();
+```
+
+React has no idea this exists now. The service lives completely outside the render cycle.
+
+Calling `set()` updates internal state and emits the new value to subscribers, but nothing re-renders unless a component explicitly decides to update itself.
+
+### Subscribing from Components via useEffect
+
+The service can now emit updates, but components still need a way to react to them.
+
+The bridge ends up being pretty simple:
+
+```ts
+import { useState, useEffect } from "react";
+import { settingsService } from "./SettingsService";
+import type { AppSettings } from "./types";
+
+export function useSettings(): AppSettings {
+  const [settings, setSettings] = useState<AppSettings>(
+    settingsService.getAll()
+  );
+
+  useEffect(() => {
+    const subscription = settingsService.subscribe(setSettings);
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  return settings;
+}
+```
+
+At this point the app technically works, and Context is no longer involved in propagating updates.
+
+But another issue appears immediately: every subscriber still gets notified for every settings change.
+
+Toggle `darkMode` and components that only care about `fontSize` still re-render because the subscription emits the entire settings object.
+
+## Reducing the Blast Radius
+
+In real apps, settings usually aren't one giant flat object anyway.
+
+You naturally end up with categories:
+- theme
+- display
+- audio
+- performance
+- feature flags
+- policies
+
+So instead of subscribing to the entire settings object, we can subscribe at the category level first.
+
+```ts
+type AppSettings = {
+  theme: {
+    darkMode: boolean;
+    accentColor: string;
+  };
+
+  display: {
+    fontSize: number;
+    compactMode: boolean;
+  };
+
+  audio: {
+    soundEnabled: boolean;
+    volume: number;
+  };
+
+  performance: {
+    cacheSize: number;
+    prefetch: boolean;
+  };
+};
+```
+
+Now the service updates categories independently:
+
+```ts
+set<K extends keyof AppSettings>(
+  category: K,
+  patch: Partial<AppSettings[K]>
+): void {
+  this.settings = {
+    ...this.settings,
+    [category]: {
+      ...this.settings[category],
+      ...patch,
+    },
+  };
+
+  this.subject.next(this.settings);
+}
+```
+
+And the hook subscribes to a category instead of the entire object:
+
+```ts
+export function useSettings<K extends keyof AppSettings>(
+  category: K
+) {
+  const [settings, setSettings] = useState(
+    settingsService.get(category)
+  );
+
+  useEffect(() => {
+    const subscription = settingsService.subscribe((all) => {
+      setSettings(all[category]);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [category]);
+
+  return {
+    settings,
+    updateSettings: (patch) =>
+      settingsService.set(category, patch),
+  };
+}
+```
+
+This already helps a lot.
+
+Changing `theme.darkMode` no longer re-renders display or audio subscribers.
+
+But inside a category, we're still over-rendering.
+
+Changing `darkMode` still re-renders components that only care about `accentColor`.
+
+## Field-Level Filtering
+
+The category split helps, but it's still pretty coarse.
+
+A `theme` object might contain:
+- dark mode
+- accent color
+- spacing
+- density
+- animation preferences
+- contrast settings
+
+A component reading `darkMode` shouldn't care about `accentColor`.
+
+So the hook can accept explicit watched fields:
+
+```ts
+useSettings("theme", ["darkMode"]);
+```
+
+Then inside the subscription we compare only those fields before calling `setState`.
+
+```ts
+export function useSettings<K extends keyof AppSettings>(
+  category: K,
+  fields?: (keyof AppSettings[K])[]
+) {
+  const [settings, setSettings] = useState(
+    settingsService.get(category)
+  );
+
+  const prevRef = useRef(settings);
+
+  useEffect(() => {
+    const subscription = settingsService.subscribe((all) => {
+      const next = all[category];
+
+      if (!fields) {
+        if (next !== prevRef.current) {
+          prevRef.current = next;
+          setSettings(next);
+        }
+
+        return;
+      }
+
+      const changed = fields.some(
+        (field) => next[field] !== prevRef.current[field]
+      );
+
+      if (changed) {
+        prevRef.current = next;
+        setSettings(next);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [category, fields]);
+
+  return {
+    settings,
+    updateSettings: (patch) =>
+      settingsService.set(category, patch),
+  };
+}
+```
+
+Now components only re-render if the specific fields they care about actually changed.
+
+At this point the rendering behavior starts becoming much more predictable.
+
+But another subtle issue showed up.
+
+## Stabilizing the Dependency Array
+
+Look at this call again:
+
+```ts
+const { settings } = useSettings(
+  "theme",
+  ["darkMode"]
+);
+```
+
+That array literal gets recreated every render.
+
+Even though the content is identical, React compares dependency arrays by reference:
+
+```ts
+["darkMode"] === ["darkMode"] // false
+```
+
+So the effect tears down the subscription and recreates it every render.
+
+Nothing is technically broken, but the churn is unnecessary.
+
+The fix was stabilizing the dependency reference itself.
+
+```ts
+import { useMemo } from "react";
+
+export function useStableArray<T>(
+  arr: T[] | undefined
+): T[] | undefined {
+  const key =
+    arr === undefined
+      ? "\x00undef"
+      : arr.join("\0");
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(() => arr, [key]);
+}
+```
+
+Now the hook can use the stabilized array instead:
+
+```ts
+const stableFields = useStableArray(fields);
+
+useEffect(() => {
+  const subscription = settingsService.subscribe((all) => {
+    // filtering logic
+  });
+
+  return () => {
+    subscription.unsubscribe();
+  };
+}, [category, stableFields]);
+```
+
+The ESLint disable here is intentional. We explicitly do NOT want the unstable array reference itself in the deps list because that's the entire thing we're trying to stabilize.
+
+## Wrapping Up
+
+I’m simplifying this a bit, but the interesting part to me wasn’t really the RxJS part itself.
+
+The bigger realization was how much large React applications depend on reference stability once they grow beyond a certain size.
+
+At small scale, unnecessary renders are mostly noise.
+
+In larger systems though, unstable references start creating real architectural problems:
+- subscriptions constantly reattaching
+- effects retriggering
+- readiness signals duplicating
+- expensive trees waking up unnecessarily
+- orchestration becoming harder to reason about
+
+At that point, stable dependencies stop being a micro-optimization and start becoming part of how the application stays predictable.
+
+This also changed how I think about React Context. Context itself isn't bad — it's just extremely aggressive propagation by default.
+
+Once enough systems depend on shared runtime state, you eventually start looking for ways to narrow that propagation boundary.
+
+### A Note on Architecture
+
+This example uses a module-level singleton:
+
+```ts
+export const settingsService = new SettingsService();
+```
+
+Which is fine for demos.
+
+In a production app though, I'd probably still inject the service through Context — not for state propagation, but for dependency injection.
+
+The important distinction is that the Context value itself stays stable.
+
+```ts
+<SettingsContext.Provider value={settingsService}>
+```
+
+That provider never changes reference, which means it doesn't trigger render cascades.
+
+At that point Context becomes:
+- a transport mechanism
+- a dependency injection layer
+
+not the actual reactive state system anymore.

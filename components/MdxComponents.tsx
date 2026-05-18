@@ -3,6 +3,7 @@ import NextImage, { type ImageProps } from "next/image";
 import Link from "next/link";
 import VideoPlayer from "@/components/VideoPlayer";
 import CodeBlock from "@/components/CodeBlock";
+import CodeSandbox from "@/components/CodeSandbox";
 
 const Components: MDXComponents = {
   pre: (props) => <CodeBlock {...props} />,
@@ -137,6 +138,7 @@ const Components: MDXComponents = {
     );
   },
   VideoPlayer,
+  CodeSandbox,
 };
 
 export default Components;
