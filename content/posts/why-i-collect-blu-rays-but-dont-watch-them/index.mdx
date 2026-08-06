@@ -1,0 +1,169 @@
+---
+isDraft: true
+title: "Why I Collect Blu-rays but Don’t Watch Them Like You’d Expect"
+slug: "why-i-collect-blu-rays-but-dont-watch-them"
+date: "2026-08-06T06:00:00.000Z"
+excerpt: "I collect Blu-rays for the quality, but I don’t actually watch them on a Blu-ray player. This is the setup I built to get close to that experience without the friction."
+cover:
+  src: ""
+  alt: "Physical media and streaming"
+tags: ["Movies", "Physical Media", "Home Setup", "Personal"]
+canonical: "https://loserkid.io/why-i-collect-blu-rays-but-dont-watch-them"
+ogTitle: "Why I Collect Blu-rays but Don’t Watch Them Like You’d Expect"
+ogDescription: "I wanted Blu-ray quality without dealing with discs. This is the setup I built using a Mac mini, external storage, and Apple TV—and the tradeoffs that come with it."
+linkedin:
+  previewMaxChars: 950
+  hashtags: ["Movies", "Physical Media", "Home Setup", "Personal"]
+  utm: "utm_source=linkedin&utm_medium=post"
+summaryBullets:
+  - "Why streaming quality still falls short compared to Blu-ray"
+  - "The setup I use (Mac mini, HDD, Infuse, Apple TV)"
+  - "The technical tradeoffs: bitrate, audio formats, and Dolby Vision"
+  - "What works great—and what still sucks"
+toc: true
+schema:
+  organization: "Personal Blog"
+  author: "Jean Aguilar"
+---
+
+## The contradiction
+
+Since 2025 I’ve been collecting Blu-rays. It’s turned into a bit of an obsession. I’m past 100 movies at this point.
+
+But here’s the thing: I don’t actually watch them on a Blu-ray player.
+
+It sounds contradictory — and honestly, it kind of is. Instead, I keep my movies digitally and stream them to my TVs.
+
+## Why not just stream?
+
+The obvious question is: why go through all that when Netflix (or any streaming service) already exists?
+
+I still use streaming, but a couple of things made me rethink it.
+
+- **Quality isn’t the same**  
+  Even if streaming and Blu-rays advertise the same resolution, they’re not delivering the same image. The difference comes down to bitrate.  
+  Streaming services have to optimize for bandwidth and stability, so they compress everything heavily. It looks good most of the time, but you start noticing the tradeoffs — especially in darker scenes, motion, or fine detail. Blu-rays simply don’t have that limitation.
+
+- **Ownership actually matters**  
+  With physical media, I know exactly what I own. I chose it, I have it, and it won’t randomly disappear because of licensing changes.  
+  Streaming feels more like temporary access than ownership — and once you notice that, it’s hard to ignore.
+
+- **Curating my own library**  
+  One thing I didn't expect was how much I'd enjoy having a curated library. Instead of endlessly scrolling through thousands of titles, every movie is there because I deliberately bought it. My collection is much smaller than any streaming catalog, but it feels far more personal. I know what's in it because I chose every single film.
+
+- **Collector Bias**  
+  The idea of owning a special edition of a movie you enjoy, with extras, booklets, or even limited runs, is a big part of the appeal. It's a bit indulgent, sure, but sometimes it's also the nicest way to own that movie physically.
+
+## What I ended up doing
+
+So I ended up somewhere in the middle.
+
+I still buy the Blu-rays, but I don’t use them directly. Instead, I rip the movies to an external HDD connected to a Mac mini, and stream them through Infuse on my Apple TVs.
+
+It’s not the “pure” Blu-ray experience — but it gets me very close, while keeping the convenience I’m used to.
+
+### The setup
+
+<Image
+  src="/posts/why-i-collect-blu-rays-but-dont-watch-them/cover.webp"
+  alt="The entire media server: a Mac mini connected to an external HDD containing my Blu-ray library."
+  width={1536}
+  height={864}
+/>
+
+The setup itself is pretty simple.
+
+The HDD is connected to my base Mac mini (2025), which basically acts as a media server. Most people would probably go with a NAS for this, but I went a different route. I like Apple’s ARM chips, and for a similar price I preferred getting a more powerful general-purpose machine instead of a dedicated NAS.
+
+Since the Mac mini acts as the media server, it stays powered on most of the time. Apple Silicon is incredibly power efficient, so I don't really think about leaving it running 24/7.
+
+Another nice side effect is that I barely handle the discs anymore. Once a movie has been ripped, the Blu-ray goes back on the shelf, which also means less wear from constantly inserting and removing it.
+
+This wasn’t a super informed decision, so it could backfire long term — but it’s the tradeoff I chose.
+
+### The workflow
+
+The goal was to remove the friction of physical media.
+
+Using discs means getting up, finding the case, inserting it, waiting through menus… it’s small things, but they add up.
+
+With this setup, everything is available over the network.
+
+I use my Windows PC to rip the Blu-rays using a 4K drive, which lets me handle everything from DVDs to 4K discs (and even CDs for music). I use MakeMKV for the ripping process, and before transferring the file to the HDD I rename it using the Movie Title (Year) convention. It makes organizing the library much easier, and both Infuse and Jellyfin have no trouble identifying the correct movie.
+
+From there, Infuse picks it up automatically, and I can just open the app on my Apple TV and press play.
+
+It ends up feeling like streaming — just with files I actually own and that's exactly what I was aiming for.
+
+## Apple TV + Infuse
+
+For playback, I use an Apple TV 4K. It’s fast, reliable, and fits naturally with the rest of my setup.
+
+Infuse is the app that makes everything work. It lets me stream my local media to the Apple TV, but more importantly, it makes it feel like a proper streaming service.
+
+All the usual stuff is there — progress tracking, favorites, artwork, categories — so instead of dealing with files, it feels a lot more like using Netflix. It's not quite as polished, but it's definitely built around the same idea. That's what removes most of the friction compared to using discs.
+
+## Living with it
+
+The funny thing is that after everything was set up, I mostly stopped thinking about it.
+
+I don't browse folders or think about file formats anymore. I just open Infuse, pick a movie, and watch it.
+
+That's exactly what I wanted.
+
+The collection still exists physically on my shelf, but day to day I interact with it more like a personal streaming service than a stack of discs.
+
+I wasn't trying to replace the Blu-ray experience. I was trying to make my collection fit the way I actually watch movies today.
+
+## The tradeoffs
+
+This setup isn’t perfect, and there are some important tradeoffs.
+
+- **You’re not getting full Blu-ray player quality**  
+  A proper Blu-ray player can use metadata that this setup simply can’t. Dolby Vision from discs (Profile 7) doesn’t fully carry over, and audio gets converted to PCM, which strips out formats like Dolby Atmos or DTS. To be fair, those advantages are mostly relevant if you're using a dedicated home theater setup with an AV receiver, a proper Blu-ray player, and speakers capable of taking advantage of those formats.
+  So no — it’s not the same experience. But it’s still much closer to Blu-ray than to streaming.
+
+- **Bitrate is still doing the heavy lifting**  
+  Even with those limitations, the big advantage remains: bitrate.  
+  Blu-rays can reach up to ~100 Mbps, while streaming services usually sit around 15–25 Mbps for 4K content. That difference is massive, and it’s the main reason this setup still looks significantly better than regular streaming.
+
+- **Wired LAN is basically required**  
+  You *can* try Wi-Fi, but high bitrate files will expose any instability immediately — buffering, stutters, random drops.
+  A wired connection removes that variable completely and makes everything feel as smooth as streaming.
+
+- **No Blu-ray menus**
+  You lose the original disc menus entirely. Personally I prefer jumping straight into the movie, but if you enjoy navigating menus or accessing bonus content that way, it's something to keep in mind.
+
+- **Storage is the weakest part**
+  Movies are huge, from 20 to even 100gb, this makes a must to have storage capacity large enough to store all that data, and HDD is cheaper than an SSD. But HDD comes at a cost, which is that is slower than an hdd, prone to failure and it can be noisy. Plus my current setup relies in one HDD that is using a enclosure, this is a very bad idea because if the drive dies I can't do a backup of the data.
+  That's where I need to upgrade my equipment to allow more drives, that are NAS rated, and a proper storage backup stratgegy, like RAID.
+
+## Jellyfin (Optional)
+
+Infuse also lets you connect to a Jellyfin server, which is a free and open-source media server. I have one running on my Mac mini because it makes managing my library a bit easier.
+
+It's not required for this setup, as Infuse can work directly with network shares, but Jellyfin adds some nice quality-of-life features like better metadata management, collections, watched status, and the ability to stream to other devices or even remotely if you decide to set that up.
+
+## Dolby Vision Conversion (Optional)
+
+By default, MakeMKV preserves the original Dolby Vision Profile 7 layer found on UHD Blu-rays. Profile 7 is designed for dedicated Blu-ray players and includes enhancement data that most streaming devices don't support.
+
+The Apple TV is one of those devices. Since it can't play Profile 7, the movie simply falls back to standard HDR10.
+
+If you want Dolby Vision playback on the Apple TV, you can convert the Profile 7 layer to Profile 8, which is compatible with streaming devices. I used a small [script](https://community.firecore.com/t/converting-dolby-vision-profile-7-to-profile-8/52306/2) shared on the Infuse forums—just drag and drop the file, and it creates a new copy with Profile 8.
+
+This only applies to movies that include Dolby Vision in the first place. I don't think the visual difference is significant, but if your TV supports Dolby Vision and you like preserving that format throughout your library, it's a nice optional step.
+
+## Would I recommend it?
+
+Probably not to everyone.
+
+If you're happy with Netflix or Disney+, there's nothing wrong with that. They're incredibly convenient and good enough for most people.
+
+This setup only really makes sense if you enjoy collecting movies, care about image quality, and don't mind spending some time setting everything up.
+
+For me, it ended up being the best of both worlds.
+
+I don't think it's objectively better than using a Blu-ray player. It's simply the compromise that fits the way I consume movies.
+
+I still get to collect movies I care about, but I watch them the same way I've gotten used to watching everything else: by pressing Play and I don't see myself going back.
