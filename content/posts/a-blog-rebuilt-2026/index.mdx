@@ -1,0 +1,90 @@
+---
+title: "A Blog Rebuilt: 2026"
+slug: "a-blog-rebuilt-2026"
+isDraft: false
+date: "2026-09-16T06:00:00.000Z"
+excerpt: "After years of mostly leaving this blog alone, I rebuilt it in 2026 with a new stack, a new design, and a better idea of what I actually wanted it to be."
+cover:
+  src: ""
+  alt: ""
+tags: ["Personal", "Web Development", "Next.js"]
+canonical: "https://loserkid.io/a-blog-rebuilt-2026"
+ogTitle: "A Blog Rebuilt: 2026"
+ogDescription: "Rebuilding my personal blog after years in the dust: the stack, the redesign, what I removed, what I kept, and how AI fit into the process."
+summaryBullets:
+  - "Why I rebuilt the blog after leaving it mostly untouched for years"
+  - "Moving from Gatsby to Next.js and simplifying the stack"
+  - "Using GitHub Copilot for scaffolding without letting the site feel AI-generated"
+  - "Features I added, removed, and changed along the way"
+  - "How analytics and Search Console fit into a blog that is still mostly just for me"
+toc: false
+schema:
+  organization: "Personal Blog"
+  author: ""
+---
+
+So this year I decided I wanted to rebuild my personal blog. To be fair, I’d wanted to do it for a long time, but time, life, annoyances, and procrastination kept getting in the way. I’d also tried doing it a couple of times before, and honestly, neither attempt got very far. I even bought some good-looking city pop <a href="https://konstantinestudio.com/product/citypop-japanese-90s-retro-fonts/" rel="noopener noreferrer" target="_blank">fonts</a> that never got used.
+
+The idea this time was that, while I’m a developer, I wanted to make something that reflected a bit more of my evolution as an engineer and as a person. I think it worked out alright. I’m happy with the result; for a personal blog, it got some pretty nice upgrades, and more importantly, it feels more like me.
+
+## The Old Blog
+
+The old blog was built with Gatsby, which at the time felt awesome. I remember the plugin ecosystem and how easy it was to wire things together. Gatsby was one of the obvious choices if you wanted to build a fast, pre-rendered React site without having to think too much about the underlying plumbing.
+
+At the time, I was still pretty early in my web development journey. Terms like SSR and CSR were already in my head, but I definitely wasn't at the point where I could properly reason about the engineering tradeoffs and constraints behind each approach. A lot of my decisions were based more on what seemed cool, what worked, and what other developers I respected were doing.
+
+And, to be fair, I probably took a little too much inspiration from Dan Abramov's old <a href="https://overreacted.io/" rel="noopener noreferrer" target="_blank">Overreacted</a>. The layout, the language translation feature, and even the theme toggle code came from there in one way or another. I learned a lot by doing that, and I still think it was a great blog to learn from, but over time mine started feeling a little too borrowed.
+
+I had my own color palette and made plenty of engineering decisions myself, but eventually I got tired of some of the choices I had made along the way. The palette started feeling old, the favicon bothered me, and the translation feature had turned into something I didn't really want to maintain. I was trying to support a Spanish audience while also carrying language options I didn't even speak. The content was still plain Markdown too, at a point where MDX gave me much more room to do interesting things.
+
+And basically, it stayed like that for years. Looking at the repo, the initial commit was in 2019, which is kind of crazy to think about. Time flies.
+
+## Starting over
+
+Even after a couple of failed attempts at rebuilding the site, I already knew Next.js was probably the way I wanted to go. Nothing against Gatsby — I genuinely liked using it — but by this point the ecosystem felt a little stagnant to me. Some of the plugins I had relied on were outdated or no longer maintained, and I wanted something where I had more control over the implementation.
+
+Next.js still gives you plenty of framework conventions, but it also feels more DIY in the places where I actually care about having control. If something breaks or I want to change how a feature works, I'd rather own that code than depend on a Gatsby plugin that hasn't been touched in years.
+
+I also knew I wanted to move from regular Markdown files to MDX. This was honestly not some carefully justified architectural decision; I just liked the idea of being able to use JSX and my own components inside a post. I don't even use that capability very often, but it's nice to have. I can control how links behave across the blog, and if one day I want to put an interactive chart inside a post, I can just build a React component with whatever charting library I feel like using and drop it in.
+
+The design took a bit longer to figure out. I'm not a designer, but I knew I wanted something different from the old site. At one point I tried making it look like a zine. That didn't go particularly well. Then I tried a city-pop-inspired design, which also didn't go particularly well — although that attempt did at least leave me with some unused fonts.
+
+Eventually I landed on my own take on an editorial layout: content on the left, navigation on the right, and relatively little decoration around it. It looks simple, but hopefully intentional, and more importantly it feels like mine.
+
+Since the blog was originally intended mostly for development posts, I also wanted navigation to be better than before. I added post filtering using a fairly simple tag system, and technical posts can now have a table of contents. That's conditional, so a post like this one doesn't need one just for the sake of having it.
+
+There were a bunch of smaller changes too: moving from styled-components to Tailwind, improving the code blocks, reworking the light and dark themes, and getting rid of things I no longer cared about maintaining, like the newsletter and translated posts.
+
+## Using AI without making it look like AI
+
+To be fair, one of the reasons I never finished any of the previous attempts at rebuilding this blog was simply that it takes a lot of time. So, with the rise of AI and development increasingly becoming a matter of delegating work to agents, I did use GitHub Copilot quite heavily to help me build this iteration.
+
+It helped me move incredibly fast, especially when scaffolding things with libraries I hadn't used much before, like Tailwind, and making sure the project followed the conventions those tools expect.
+
+I'd say this was genuinely great. The amount of time it took me to build the site was insanely short compared with what it would have taken before. Honestly, that was probably the difference between another abandoned rewrite and actually finishing this one.
+
+That being said, I still took my time evaluating the decisions it made. I didn't want the site to end up looking like one of those prebuilt AI websites where everything is technically clean but somehow looks exactly like everything else. I also care about following good engineering practices, and while AI will often suggest reasonable patterns, that doesn't mean its suggestions can't be outdated, unnecessary, or just straight-up bad. After working as a developer for a while, you start noticing those things pretty quickly.
+
+And I think that's where developers still have a pretty big advantage. We're used to working with systems much larger than whatever is directly in front of us. We think about constraints, maintenance, dependencies, how things evolve, and what happens six months later when somebody has to touch the code again.
+
+I genuinely like that AI now lets almost anyone build things that would have been much harder before. But I also think people underestimate how easily small engineering decisions can come back to bite you in the ass later. Getting the scaffolding right, choosing sensible abstractions, and knowing when not to accept what the model suggests are things I still think experienced developers are pretty good at.
+
+## What people actually read
+
+One of the things I learned over time as a developer is how much telemetry can matter for understanding what people actually do on a website. So adding Google Analytics and using Google Search Console was something I wanted to be intentional about. Not because I'm trying to optimize every metric, but because I was genuinely curious about how the site is actually being used.
+
+As expected, the audience is small and there's not a huge amount happening, but it still gives me a better idea of what content resonates with the few visitors I get. The TL;DR is mostly development stuff, and funnily enough, the most visited article isn't even the one I consider the best.
+
+But that's how the internet works, I guess. You write things years later that you think are better, and Google decides the random React article from forever ago is the one people should see.
+
+## What the blog is now
+
+There’s no grand plan for this blog. If anything, it’s a bit of a money pit for me — **.io** domains somehow keep getting more expensive every year, which made it feel even sillier that I wasn’t properly maintaining the thing.
+
+So I started thinking about it more as my own little space on the internet. It doesn’t always have to be about development. I might rant about my movie collection, music, how I use AI for personal stuff, work-related things, or whatever else I happen to find interesting at the time.
+
+At the same time, I don’t want to turn it into another responsibility where I feel like I have to keep posting just to prove the blog is alive. I want it to remain a place where I can share things that are meaningful to me, or things I think might be meaningful or useful to whoever happens to read them.
+
+I do want to write more development-related stuff. I’m not completely oblivious — that’s clearly where most of the traffic goes. But I also want the technical things I publish to be things I’m actually proud of, which is probably why I’ve become a little more hesitant to post them as often.
+
+And who knows, maybe in a few more years I’ll redesign the whole thing again. Hopefully by then there’ll be a lot more new content here to rebuild around.
